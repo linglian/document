@@ -1,0 +1,159 @@
+#include <iostream>
+#include <stdlib.h>
+#include <cstring>
+#include <string>
+#include <stdio.h>
+using namespace std;
+/*
+设计思路:
+      1.创建哈夫曼树
+      2.给每个权值编码
+      3.输入一个哈夫曼编码，给该编码解码
+设计内容:
+      1.输入权值个数，并依次输入权值，每次挑选出来两个最小的，增加一个结点，该节点的权值为两个权值
+        相加，该节点的左右孩子为挑选出来的两个最小的结点，两个结点的父节点为该结点，以此类推，直到出现根节点
+      2.根据结点的位置给该权值编码如图：
+                                14
+                             0|    |1
+                              5    9
+                           0| |1  0| |1
+                           2  3    4  5
+                    则根据2对应根结点所在的位置，2的哈夫曼编码应为00。
+      3.解码，每次从根结点开始，通过标记记录权值的下标，如果为0，则下标就是该结点的左孩子，如果为1下标就是右孩子，如果该权值对应的结点
+        的左孩子为空，说明该结点为叶子结点，那么就输出该权值，从而完成解码。
+*/
+int m, s1, s2;
+
+typedef struct
+{
+    int weight;
+    int parent, lchild, rchild;
+} HTNode, *HuffmanTree;
+
+typedef char* HuffmanCode;
+
+void SelectMin(HuffmanTree HT, int nNode)
+{
+    int i, j;
+    for(i = 1; i <= nNode; i++)
+        if(!HT[i].parent)
+        {
+            s1 = i;
+            break;
+        }
+    for(j = i+1; j <= nNode; j++)
+        if(!HT[j].parent)
+        {
+            s2 = j;
+            break;
+        }
+    for(i = 1; i <= nNode; i++)
+        if((HT[i].weight < HT[s1].weight) && (!HT[i].parent) && (s2 != i))
+            s1 = i;
+    for(j = 1; j <= nNode; j++)
+        if((HT[j].weight < HT[s2].weight) && (!HT[j].parent) && (s1 != j))
+            s2 = j;
+    if(HT[s1].weight > HT[s2].weight)
+    {
+        int tmp = s1;
+        s1 = s2;
+        s2 = tmp;
+    }
+}
+void HuffmanCoding(HuffmanTree &HT, HuffmanCode *&HC, int *w, int nNode)
+{
+    int i, j;
+    char *hfcode;
+    int p;
+    int cdlen;
+    if(nNode < 1)
+        return;
+    m = 2*nNode-1;
+    HT = (HTNode*) malloc ((m+1) *sizeof(HTNode));
+    for(i = 1; i <= nNode; i++)
+    {
+        HT[i].weight = w[i-1];
+        HT[i].parent = 0;
+        HT[i].lchild = 0;
+        HT[i].rchild = 0;
+    }
+    for(i = nNode+1; i <= m; i++)
+    {
+        HT[i].weight = 0;
+        HT[i].parent = 0;
+        HT[i].lchild = 0;
+        HT[i].rchild = 0;
+    }
+    for(i = nNode+1; i <= m; i++)
+    {
+        SelectMin(HT, i-1);
+        HT[s1].parent = i;
+        HT[s2].parent = i;
+        HT[i].lchild = s1;
+        HT[i].rchild = s2;
+        HT[i].weight = HT[s1].weight + HT[s2].weight;
+    }
+    hfcode = (char *) malloc ( (nNode + 1) * sizeof( char ) );
+    hfcode[nNode] = '\0';
+    int start;
+    int c;
+    for(int i=1; i<=nNode; i++)
+    {
+        start = nNode;
+        for(c=i, p=HT[c].parent; p!=0; c=p,p=HT[p].parent)
+        {
+            if(c==HT[p].lchild)
+                hfcode[--start]='0';
+            else if(c==HT[p].rchild)
+                hfcode[--start]='1';
+        }
+        HC[i] = (char *) malloc ((nNode-start+1) * sizeof(char));
+        strcpy(HC[i], &hfcode[start]);
+    }
+    free(hfcode);
+}
+void HuffmanDecode(HuffmanTree HT,int n, string code)
+{
+    int len = code.length();
+    int j=2*n-1;
+    for(int i=0; i<len; i++)
+    {
+        if(code[i]=='0')
+            j = HT[j].lchild;
+        else
+            j = HT[j].rchild;
+        if(HT[j].lchild==0)
+        {
+            cout << HT[j].weight<<" ";
+            j=2*n-1;
+        }
+    }
+}
+
+int main()
+{
+    HuffmanTree HT = NULL;
+    HuffmanCode *HC;
+    int *w, nNode, i;
+    string CodeStr;
+    cout<<"输入结点数: "<<endl;
+    cin>>nNode;
+    HC = (HuffmanCode *) malloc (nNode* sizeof(HuffmanCode));
+    w = (int *) malloc (nNode * sizeof(int));
+    cout<<"输入 "<<nNode<<" 个结点的权值\n";
+    for(i = 0; i < nNode; i++)
+        cin>>w[i];
+    HuffmanCoding(HT, HC, w, nNode);
+    cout<<"\n哈夫曼编码:"<<endl;
+    for(i = 1; i <= nNode; i++)
+    {
+        cout << HC[i];
+
+    }
+    cout <<endl;
+    cout << "输入一串哈夫曼编码:"<<endl;
+    cin>> CodeStr;
+    cout<<"解码:"<<endl;
+    HuffmanDecode(HT,nNode,CodeStr);
+    return 0;
+}

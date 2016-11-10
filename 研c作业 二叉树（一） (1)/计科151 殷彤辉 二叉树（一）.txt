@@ -1,0 +1,386 @@
+1.计算叶子结点个数
+
+    #include <iostream>
+    using namespace std;
+    /**
+    设计思路:
+        1.首先创建一个二叉树
+        2.然后计算叶子结点个数
+    设计内容:
+        1.Creat(BiNode *bt) 将根节点传入，通过递归调用该函数完成创建二叉树
+        2.LeafCount(BiNode *bt) 通过判断该节点的左右孩子来判断该节点是否为叶子结点，如果是输出，并记录叶子结点个数加一
+                                如果不是叶子结点在看其左右孩子(此过程也是通过递归方法 完成)
+    */
+    struct BiNode//创建二叉树的结点
+    {
+        int data;//二叉树的数据域为int型变量
+        BiNode *lchild,*rchild;//定义二叉树的左右孩子
+    };
+    class BiTree//创建树类
+    {
+    public:
+        BiTree(){root = Creat(root);}//创建二叉树
+        int LeafCount(){return LeafCount(root);//计算叶子结点的个数
+        }
+    private:
+        BiNode *root;//定义根结点
+        BiNode *Creat(BiNode *bt);
+        int LeafCount(BiNode *bt);
+    };
+    /*
+    创建二叉树
+        输入第一个数，判断是否为0，如果为0则说明该树的根为0，停止输入
+        如果第一个数不为0，则创建该二叉树的左结点，创建完左结点创建右结点，返回根结点
+    */
+    BiNode *BiTree::Creat(BiNode *bt)
+    {
+        int ch;
+        cin >> ch;
+        if(ch==0)bt= NULL;
+        else{
+        bt = new BiNode;
+        bt->data = ch;
+        bt->lchild=Creat(bt->lchild);
+        bt->rchild=Creat(bt->rchild);
+        }
+        return bt;
+    }
+    /*
+    计算叶子结点
+        定义一个静态变量num来计算叶子的个数
+        根据判断一个节点的左右孩子是否都为空来判断该节点是否为叶子结点，如果是叶子结点则输出 num++
+        如果不是叶子结点，再继续判断其左右孩子，知道所有的结点判断完毕
+    
+    */
+    int BiTree::LeafCount(BiNode *bt)
+    {
+        static int num=0;
+        if(bt)
+        {
+            if((!bt->lchild)&&(!bt->rchild))
+            {
+                num++;
+                cout << bt->data << " ";
+            }
+            else{
+                LeafCount(bt->lchild);
+                LeafCount(bt->rchild);
+            }
+        }
+        return num;
+    }
+    int main()
+    {
+        BiTree bt;
+        cout <<endl<< bt.LeafCount()<<endl;
+        return 0;
+    }
+
+2.计算二叉树的深度
+
+    #include <iostream>
+    using namespace std;
+    /**
+    设计思路:
+        1.首先创建一个二叉树
+        2.然后计算该二叉树的深度
+    设计内容:
+        1.Creat(BiNode *bt) 将根节点传入，通过递归调用该函数完成创建二叉树
+        2.Height(BiNode *bt) 通过递归计算 左右结点的深度，来判断该 树的深度
+    */
+    struct BiNode//创建二叉树的结点
+    {
+        char data;//二叉树的数据域为int型变量
+        BiNode *lchild,*rchild;//定义二叉树的左右孩子
+    };
+    class BiTree//创建树类
+    {
+    public:
+        BiTree(){root = Creat(root);}//创建二叉树
+        int Height(){return Height(root);}//计算树的深度
+    
+    private:
+        BiNode *root;//定义根结点
+        BiNode *Creat(BiNode *bt);
+        int Height(BiNode *bt);
+    };
+    /*
+    创建二叉树
+        输入第一个数，判断是否为0，如果为0则说明该树的根为0，停止输入
+        如果第一个数不为0，则创建该二叉树的左结点，创建完左结点创建右结点，返回根结点
+    */
+    BiNode *BiTree::Creat(BiNode *bt)
+    {
+        char ch;
+        cin >> ch;
+        if(ch=='#')bt= NULL;
+        else{
+        bt = new BiNode;
+        bt->data = ch;
+        bt->lchild=Creat(bt->lchild);
+        bt->rchild=Creat(bt->rchild);
+        }
+        return bt;
+    }
+    /*
+    计算树的深度
+        首先判断该二叉树是否为空树
+        如果不是空树分别用两个变量来记录左结点和右结点的深度，
+        最后判断哪个较大，则树的深度就是多少。
+    */
+    int BiTree::Height(BiNode *bt)
+    {
+        int i,j;
+        if(bt == NULL)return 0;
+        i=Height(bt->lchild);
+        cout << "i="<<i <<endl;
+        j=Height(bt->rchild);
+        cout << "j="<<j <<endl;
+        if(i>j) return(i+1);
+            return (j+1);
+    }
+    int main()
+    {
+        BiTree bt;
+        cout << bt.Height()<<endl;
+        return 0;
+    }
+
+3.判断一棵二叉树是否为完全二叉树
+
+    #include<iostream>
+    #include <queue>
+    using namespace std;
+    static int f = 1;
+    static bool com = true;
+    struct BiNode
+    {
+        char data;
+        int flag;
+        BiNode* lchild;
+        BiNode* rchild;
+    };
+    queue<BiNode*> q;
+    class BiTree
+    {
+    public:
+        BiTree(){root=Creat(root);}
+        void LeverOrder();
+        void IsCompleteBindryTree(){IsCompleteBindryTree(root); cout << com;}
+    private:
+        BiNode *root;
+        BiNode *Creat(BiNode *bt);
+        void IsCompleteBindryTree(BiNode *bt);
+    };
+    
+    BiNode *BiTree::Creat(BiNode *bt)
+    {
+        char ch;
+        cin>>ch;
+        if(ch=='#')bt=NULL;
+        else
+        {
+            bt = new BiNode ;
+            bt ->data = ch;
+            bt->lchild=Creat(bt->lchild);
+            bt->rchild=Creat(bt->rchild);
+        }
+        return bt;
+    }
+    void BiTree::LeverOrder()
+    {
+    	BiNode *q;
+    	queue<BiNode*> Q;
+    	if(root == NULL)return ;
+    	Q.push(root);
+    	while(!Q.empty())
+    	{
+    	    q = Q.front();
+    		Q.pop();
+            q->flag=f++;
+    		if(q->lchild!=NULL) {Q.push(q->lchild);}
+    		if(q->rchild!=NULL) {Q.push(q->rchild);}
+    	}
+    }
+    void BiTree::IsCompleteBindryTree(BiNode *bt)
+    {
+        if(!bt)
+            return;
+        if (!com)
+            return;
+        if(bt->lchild && bt->lchild->flag != bt->flag*2)
+            com = false;
+        if(bt->rchild && bt->rchild->flag != bt->flag*2+1)
+            com = false;
+        IsCompleteBindryTree(bt->lchild);
+        IsCompleteBindryTree(bt->rchild);
+    }
+    int main()
+    {
+        BiTree bt;
+        bt.LeverOrder();
+        bt.IsCompleteBindryTree();
+        return 0;
+    }
+
+4.求某结点的双亲结点
+
+    #include <iostream>
+    using namespace std;
+    /**
+    设计思路:
+        1.首先创建一个二叉树
+        2.查找某节点的孩子是否为该结点
+    设计内容:
+        1.Creat(BiNode *bt) 将根节点传入，通过递归调用该函数完成创建二叉树
+        2.Parent(BiNode *x) 判断当前节点的左孩子或右孩子是否为查找的结点
+    */
+    struct BiNode//创建二叉树的结点
+    {
+        char data;//二叉树的数据域为int型变量
+        BiNode *lchild,*rchild;//定义二叉树的左右孩子
+    };
+    class BiTree//创建树类
+    {
+    public:
+        BiTree(){root = Creat(root);}//创建二叉树
+        void Parent(BiNode *x){ Parent(root,x);}
+    private:
+        BiNode *root;//定义根结点
+        BiNode *Creat(BiNode *bt);
+        void Parent(BiNode *bt,BiNode *x);
+    };
+    /*
+    创建二叉树
+        输入第一个数，判断是否为0，如果为0则说明该树的根为0，停止输入
+        如果第一个数不为0，则创建该二叉树的左结点，创建完左结点创建右结点，返回根结点
+    */
+    BiNode *BiTree::Creat(BiNode *bt)
+    {
+        char ch;
+        cin >> ch;
+        if(ch=='#')bt= NULL;
+        else{
+        bt = new BiNode;
+        bt->data = ch;
+        bt->lchild=Creat(bt->lchild);
+        bt->rchild=Creat(bt->rchild);
+        }
+        return bt;
+    }
+    void  BiTree::Parent(BiNode *bt,BiNode *x)
+    {
+        if(bt){
+            if(bt->lchild&&bt->lchild->data == x->data )
+            {
+                cout << bt->data << endl;
+            }
+            if(bt->rchild&&bt->rchild->data == x->data )
+            {
+                cout << bt->data << endl;
+            }
+            Parent(bt->lchild,x);
+            Parent(bt->rchild,x);
+        }
+    }
+    int main()
+    {
+        BiTree bt;
+        char n;
+        cin >> n;
+        BiNode *x = new BiNode;
+        x->data = n;
+        bt.Parent(x);
+        return 0;
+    }
+
+5.建立线性二叉树
+
+    #include <iostream>
+    using namespace std;
+    enum flag {Child =0,Thread = 1};
+    struct ThrNode
+    {
+        char data;
+        ThrNode *lchild,*rchild;
+        flag ltag,rtag;
+    };
+    class InThrBiTree
+    {
+    public:
+        InThrBiTree();
+        ThrNode *Next(ThrNode *p);
+        void InOrder();
+    private:
+        ThrNode *root;
+        ThrNode *pre;
+        ThrNode *Creat(ThrNode *bt);
+        void ThrBiTree(ThrNode *bt);
+    };
+    ThrNode *InThrBiTree::Creat(ThrNode *bt)
+    {
+        char ch;
+        cin >>ch;
+        if(ch== '#')bt =NULL;
+        else{
+            bt=new ThrNode;
+            bt->data = ch;
+            bt->ltag = Child;
+            bt->rtag = Child;
+            bt->lchild = Creat(bt->lchild);
+            bt->rchild = Creat(bt->rchild);
+         }
+         return bt;
+    }
+    void InThrBiTree::ThrBiTree(ThrNode *bt)
+    {
+        if(bt==NULL) return;
+        ThrBiTree(bt->lchild);
+        if(bt->lchild == NULL)
+        {
+            bt->ltag = Thread;
+            bt->lchild =pre;
+        }
+        if(bt->rchild == NULL) bt->rtag = Thread;
+         if(pre&&pre->rtag == 1) pre->rchild =bt;//cout << "ThrBiTree" << endl;
+        pre = bt;
+    
+        ThrBiTree(bt->rchild);
+    }
+    InThrBiTree::InThrBiTree()
+    {
+        root = Creat(root);
+        ThrBiTree(root);
+    }
+    ThrNode *InThrBiTree::Next(ThrNode *p)
+    {
+    
+        ThrNode *q;
+        if(p->rtag == Thread) q= p->rchild;
+        else{
+            q = p->rchild;
+            while(q->ltag == Child)
+                q = q->lchild;
+        }
+        return q;
+    }
+    void InThrBiTree::InOrder()
+    {
+        ThrNode *p;
+        if(root == NULL)return ;
+        p=root;
+        while(p->ltag == Child)
+            p=p->lchild;
+        cout << p->data << " ";
+        while(p->rchild !=NULL)
+        {
+            p=Next(p);
+            cout << p->data << " ";
+        }
+    }
+    int main()
+    {
+        InThrBiTree itbt;
+        itbt.InOrder();
+        return 0;
+    }

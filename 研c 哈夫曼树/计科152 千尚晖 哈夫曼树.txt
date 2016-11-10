@@ -1,0 +1,55 @@
+/*#include<iostream>
+using namespace std;
+typedef struct element
+{
+	int weight;
+	int lchild, rchild, parent;
+}element;
+void Sort(element huffTree[],int n)
+{
+	for(int i=0;i<n-1;i++)
+	{
+		for(int j=0;j<n-1-i;j++)
+		{
+			if(huffTree[j].weight>huffTree[j+1].weight)
+			{
+				int temp = huffTree[j+1].weight;
+				huffTree[j + 1].weight = huffTree[j].weight;
+				huffTree[j].weight = temp;
+			}
+		}
+	}
+}
+void Select(int &i1,int &i2)
+{
+	i1 = i1 + 2;
+	i2 = i2 + 2;
+}
+void HuffmanTree(element huffTree[],int w[],int n)  //n个叶子节点
+{
+	int i1, i2;
+	i1 = 0; i2 = 1;
+	for (int i = 0; i < 2 * n - 1; i++)
+	{
+		huffTree[i].lchild = -1;
+		huffTree[i].rchild = -1;
+		huffTree[i].parent = -1;
+		huffTree[i].weight = 0;
+	}
+	for (int i = 0; i < n; i++)
+	{
+		huffTree[i].weight = w[i];   //构造n棵只含有根节点的二叉树
+	}
+	Sort(huffTree, n);
+	for (int k = n; k < 2 * n - 1; k++)
+	{
+		huffTree[i1].parent = k;
+		huffTree[i2].parent = k;
+		huffTree[k].weight = huffTree[i1].weight + huffTree[i2].weight;
+		huffTree[k].lchild = i1;
+		huffTree[k].rchild = i2;
+		Select(i1, i2);
+		if (i1 == 2 * n - 2)
+			break;
+	}
+}*/

@@ -1,0 +1,42 @@
+#游戏人物设计
+--- 
+##基础属性:
+    1. 生命-hp
+    2. 最大生命-maxHp
+    3. 法力-mp
+    4. 最大法力-maxMp
+    5. 物理攻击下限-pAttLow-physicsAttackLowLimit
+    6. 物理攻击上限-pAttHigh-physicsAttackHighLimit
+    7. 法术攻击下限-mAttLow-magicAttackLowLimit
+    8. 法术攻击上限-mAttHigh-magicAttackHighLimit
+    9. 物理防御-pDefPower-physicsDefensizePower
+    10. 法术防御-mDefPower-magicDefensizePower
+    11. 等级-lvl
+    12. 最大等级-maxLvl
+    13. 经验-exp
+    14. 最大经验-maxExp
+    15. 经验掉落率-dropExpOdds
+    16. 金钱-money
+    17. 最大金钱-maxMoney
+    18. 金钱掉落率-dropMonOdds-dropMoneyOdds
+    19. 力量-liliang-生命+4,物理攻击下限+2,物理攻击上限+3.5,物理防御+2，暴击伤害+2,攻击速度+1.5
+    20. 敏捷-minjie-生命*2,物理攻击下限+1,物理攻击上限+2,法力*2，闪避+0.25,暴击几率+0.5,暴击伤害+1,攻击速度+5
+    21. 智力-zhili-法力*5，法术攻击下限+2,法术攻击上限+3.5,法术防御*3，物理防御*0.5,攻击速度+2.5
+    22. 体质-tizhi-生命*5，物理防御*3，法术防御*1.5，,攻击速度+1
+    23. 基础攻击速度-norFightSpeed-标准1速度为1秒，此速度为基础速度
+    23. 攻击速度加成-fightSpeedAmp-标准1速度为1秒，此速度为加成，公式为基础攻击速度/（1+攻击速度）,100为加成百分之百
+##特殊属性  
+    1. 物理暴击伤害增幅-pVioHurtAmp-physicsViolenceHurtAmplification
+    2. 物理暴击伤害附加-pVioHurtAdd-physicsViolenceHurtAddition
+    3. 物理暴击概率-pVioHurtOdds-physicsViolenceHurtOdds
+    4. 物理暴击时无视防御力增幅-pVioHurtMissDefAmp-physicsViolenceHurtMissDefensizeAmplification
+    5. 物理暴击时无视防御力附加-pVioHurtMissDefAdd-physicsViolenceHurtMissDefensizeAddition
+    6. 物理暴击时无视防御力概率-pVioHurtMissDefOdds-physicsViolenceHurtMissDefensizeOdds
+    7. 闪避几率-doeOdds-dodgeOdds-公式对方的精准-自己的闪避值，满值为100
+    8. 每秒回复生命-recoverHpPerSecond
+    9. 每秒回复法力-recoverMpPerSecond
+    10. 击中回复生命-recoverHpPerHit
+    11. 击中回复法力-recoverMpPerHit
+    12. 物品掉落加成-extraItemOdds
+    13. 经验加成-extraExpOdds
+    14. 金钱加成-extraMoneyOdds

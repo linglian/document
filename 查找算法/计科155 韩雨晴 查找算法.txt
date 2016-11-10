@@ -1,0 +1,437 @@
+// search.cpp : 定义控制台应用程序的入口点。
+//
+/*功能：①顺序查找
+		②二分查找（递归与非递归版）
+		③分块查找：
+			分块查找程序中的字符串
+			分块查找单文件中的字符
+			分块查找多个文件中的某字符
+*/
+
+#include "stdafx.h"
+
+#include <iostream>
+#include <fstream>
+#include <string>
+
+using namespace std;
+
+//顺序查找
+template <class DataType>
+int SequenceSearch(DataType arr[], int n, DataType value)
+{
+	for (int i = 0; i < n; i++)
+		if (arr[i] = value)
+			return i;
+	return -1;
+}
+
+//二分法（非递归）
+template <class DataType>
+int BinarySearch1(DataType arr[], int n, DataType value)
+{
+	int left = 0, right = 0, midle = 0;
+	right = n - 1;
+	while (left < right)
+	{
+		midle = (left + right) / 2;
+		if (arr[midle] == value)
+			return midle;
+		if (arr[midle] < value)
+			left = midle + 1;
+		if (arr[midle] > value)
+			right = midle - 1;
+	}
+	return -1;
+}
+
+//二分法（递归）
+template <class DataType>
+int BinarySearch2(DataType arr[], DataType value, int left, int right)
+{
+	int midle = left + (right - left) / 2; 
+	if (arr[midle] == value)
+		return midle;
+	if (arr[midle] < value)
+		return BinarySearch2(arr, value, midle+1, right);
+	if (arr[midle] > value)
+		return BinarySearch2(arr, value, left, midle-1);
+	return -1;
+}
+
+
+//===============分块查找=============
+struct Index
+{
+	int start, end;
+	int max;
+};
+class BlockSearch
+{
+public:
+	BlockSearch(string file);					//对已经读取到内部存储区的数据进行分块（传入数据）
+	void SetIndex(Index index[]);					//用户自定义分块，要求大于三块
+	int SearchMaxIndex(int i);					//查找内部存储区的第i块的最大值
+	int Search(char value);						//查找内部存储区某字符
+	static int singleFileSearch(string filename,char value);	//在外部内存查找(单文件)
+	static int * manyFileSearch(string filename[],char value);	//在外部存储查找（多文件）
+private:
+	Index index[100];
+	string file;
+};
+
+/*未设置参数的情况下分三块（对内部存储区的数据进行分块）*/
+BlockSearch::BlockSearch(string file)
+{
+	if (file.empty())
+		return;
+	int i = 0;
+	for (i = 0; i < 100; i++)
+	{
+		index[i].start = index[i].end = index[i].max = 0;
+	}
+	this->file = file;  i = file.size();
+	index[0].start = 0;           index[0].end = i / 3 - 1;        index[0].max = SearchMaxIndex(0); 
+	index[1].start = i / 3;       index[1].end = 2 * (i / 3) - 1;  index[1].max = SearchMaxIndex(1);
+	index[2].start = 2 * (i / 3); index[2].end = i - 1;            index[2].max = SearchMaxIndex(2);
+}
+
+//查找分块中最大元素
+int BlockSearch::SearchMaxIndex(int i)
+{
+	if (index[i].end == 0 )
+		return -1;
+	int max = file.at(index[i].start); 
+	for (int j = index[i].start; j <= index[i].end; j++)
+		if (file.at(j) > max)
+			max = file.at(j);
+	return max;
+}
+
+//用户设置分块index(大于三块)
+void BlockSearch::SetIndex(Index index[])
+{
+	int i = 0;
+	while (index[i].start != NULL)
+	{
+		this->index[i].start = index[i].start;
+		this->index[i].end = index[i].end;
+		this->index[i].max = index[i].max;
+		i++;
+	}
+	i = 0;
+	while(this->index[i].end != 0)
+		index[i].max = SearchMaxIndex(i);
+}
+
+//查找某字符
+int BlockSearch::Search(char value)
+{
+	int i = 0, j;
+	for (i = 0; index[i].end != 0; i++);
+	j = i - 1;
+	for (i = 0; index[i].end != 0; i++)
+		if (index[i].max >= value && index[i].max < index[j].max)
+			j = i;
+	for (int k = index[j].start; k <= index[j].end; k++)
+		if (value == file.at(k))
+			return k;
+	return -1;
+}
+
+//单文件外部内存查找
+int BlockSearch::singleFileSearch(string filename,char value)
+{
+	ifstream in; 
+	char max; int i = 1, start = 0, end = 0, index = -1;
+	try
+	{
+		in.open(filename); string temp;
+		in >> temp;	max = temp.at(0); 			//读取第一个快的最大值
+		while ( max < value )					//找到待查找字符所在块
+		{
+			max = temp.at(i); i++;		
+		}
+		while (i--)						//读取字符所在块的位置
+			in >> start >> end;
+		getline(in,temp);
+		in.seekg(start, ios::cur);			 	//将流指针从当前位置移动start个位置（即移动至字符所在块的首位置）
+		for (i = start; i <= end; i++)		  		//开始遍历字符所在块
+		{
+			in >> max;
+			if (max == value)				//如果找到该字符，存储下标并跳出循环
+			{
+				index = i; break;
+			}
+		}
+	}
+	catch (exception e)
+	{
+		in.close();
+	}	
+	in.close();
+	return index;
+}
+
+//多文件外部内存查找
+int * BlockSearch::manyFileSearch(string filename[],char value)
+{
+	ifstream in; int i = 0, j = 0,index = -1,file_index = -1; char max;
+	try
+	{
+		while (!filename[i].empty())
+		{
+			in.open(filename[i]);
+			in >> max;
+			if (max >= value) { file_index = i; break; }
+			in.close(); i++; 
+		}//cout << i << endl;
+		//string temp; getline(in, temp);
+		while (!in.eof())
+		{
+			in >> max; //printf("%d ",max);
+			if (max == value) { index = j; break; }
+			j++;
+		}
+	}
+	catch (exception e)
+	{
+		in.close();
+	}
+	in.close(); int * fileindex_index = new int[2];
+	fileindex_index[0] = file_index; fileindex_index[1] = index;
+	return fileindex_index;
+}
+
+//读文件
+string ReadFile(string filename)
+{
+	string s, temp;
+	ifstream in;
+	try
+	{
+		in.open(filename);
+		while (getline(in, temp))
+			s += temp;
+	}
+	catch (exception e)
+	{
+		return NULL;
+	}
+	return s;
+}
+
+//写文件
+bool WriteFile(string filename, string file)
+{
+	ofstream out;
+	try
+	{
+		out.open(filename);
+		out << file;
+	}
+	catch (exception e)
+	{
+		return false;
+	}
+	return true;
+}
+
+int main1()
+{
+	/*=====================下标均为从零开始=======================*/
+	//顺序查找，二分法查找的测试
+	int a[10] = {0,1,2,3,4,5,6,7,8,9};
+	int index = SequenceSearch<int>(a, 10, 8);
+	cout << a[index] << endl;
+	
+	index = BinarySearch1<int>(a,10,8);
+	cout << a[index] << endl;
+	
+	index = BinarySearch2<int>(a, 8, 0, 9);
+	cout << a[index] << endl;
+
+	/*==========================分块查找===================*/
+	WriteFile("BlockSearchTest", "cbadefghkji");				//设计内部内存查找文件
+	WriteFile("singleFileSearch.txt","jo\n0 9 10 14\nabjciefghdolmnk"); 	//设计单文件外部内存查找文件
+	//======设计多文件外部内存查找文件====
+	WriteFile("manyFileSearch1.txt", "g\ngacdefb");						
+	WriteFile("manyFileSearch2.txt", "j\nhji");
+	WriteFile("manyFileSearch3.txt", "n\nlknm");
+	WriteFile("manyFileSearch4.txt", "z\nwopzqryvstux");
+
+	//分块查找内部存储简单测试（自动分块）
+	string read = ReadFile("BlockSearchTest");
+	BlockSearch block_search(read);
+	int i = block_search.Search('i');
+	cout << i << endl;
+
+	//分块查找(外部存储单文件查找测试)
+	i = BlockSearch::singleFileSearch("singleFileSearch.txt", 'o');
+	cout << i << endl;
+
+	//分块查找(外部存储多文件查找测试)
+	string filename[4];
+	filename[0] = "manyFileSearch1.txt"; filename[1] = "manyFileSearch2.txt"; 
+	filename[2] = "manyFileSearch3.txt"; filename[3] = "manyFileSearch4.txt";
+	int * temp = BlockSearch::manyFileSearch(filename,'x');
+	cout << temp[0] << " " << temp[1] <<endl;				//文件下标，所在文件位置下标
+    return 0;
+}
+
+//=====================================二叉排序树===============================================================================
+template <class DataType>
+class BinaryTreeNode
+{
+public:
+	BinaryTreeNode() {}
+	void deleteNode() { delete lchild; delete rchild; };
+	DataType data;
+	BinaryTreeNode * lchild, * rchild;
+};
+
+template <class DataType>
+class SearchBinaryTree
+{
+private:
+	BinaryTreeNode<DataType> * root;
+
+	void TraverseTree(BinaryTreeNode<DataType> * bt);					//中序遍历调用
+	BinaryTreeNode<DataType> * SearchNode(BinaryTreeNode<DataType> * &p, DataType data);	//查找结点调用
+public:
+	SearchBinaryTree(DataType data[],int n);						//构造函数
+	~SearchBinaryTree();									//析构函数
+	bool InsertNode(BinaryTreeNode<DataType> * &p,DataType data);				//插入节点函数
+	bool DeleteNode(DataType data);								//删除结点
+	BinaryTreeNode<DataType> * SearchNode(DataType data) { return SearchNode(root,data); }	//查找结点调用
+	void TraverseTree() { TraverseTree(root); }						//遍历二叉排序树（中序遍历）
+};
+//构造函数（将用户给定的有序数组插入二叉排序树）
+template <class DataType>
+SearchBinaryTree<DataType>::SearchBinaryTree(DataType data[],int n)
+{
+	for (int i = 0; i < n; i++)
+		InsertNode(root,data[i]);
+}
+//析构函数（删除指针项）
+template <class DataType>
+SearchBinaryTree<DataType>::~SearchBinaryTree()
+{
+	delete[] root;
+}
+//递归法插入结点
+template <class DataType>
+bool SearchBinaryTree<DataType>::InsertNode(BinaryTreeNode<DataType> * &p, DataType data)
+{
+	if (p == NULL)							//当给定结点为空时
+	{			
+		p = new BinaryTreeNode<DataType>;			//将用户给定的待插入数据插入此结点
+		p->data = data; p->lchild = p->rchild = NULL;
+		return true;
+	}
+	if (p->data == data)						//当用户给定数据的大小等于给定结点的数据时证明插入有误返回错误值
+		return false;
+	if (data < p->data)						//当用户给定数据的大小小于给定结点的数据时，以结点左孩子为新结点继续递归插入
+		InsertNode(p->lchild,data);
+	if (data > p->data)
+		InsertNode(p->rchild,data);				//当用户给定数据的大小大于给定结点的数据时，以结点右孩子为新结点继续递归插入
+	return false;
+}
+
+//遍历二叉排序树
+template <class DataType>
+void SearchBinaryTree<DataType>::TraverseTree(BinaryTreeNode<DataType> * bt)
+{
+	if (root == NULL)
+		cout << "NULL" << endl;
+	if (bt != NULL)
+	{
+		TraverseTree(bt->lchild);
+		cout << bt->data << " ";
+		TraverseTree(bt->rchild);
+	}
+}
+
+//删除某节点
+template <class DataType>
+bool SearchBinaryTree<DataType>::DeleteNode(DataType data)
+{
+	BinaryTreeNode<DataType> * p = SearchNode(data);
+	if (p == NULL)
+		return false;
+	if (p->lchild == NULL && p->rchild == NULL)			//情况1，该数据所在结点没有左右孩子
+	{
+		BinaryTreeNode<DataType> * q = root,* s = root;
+		while (1)						//利用此循环将数据所在结点的的双亲结点找到
+		{
+			if (q == NULL || q->data == data)
+				break;
+			if (data < q->data)
+			{ s = q; q = q->lchild; }
+			if (data > q->data)
+			{ s = q; q = q->rchild; }
+		}
+		if (s->lchild != NULL && s->lchild->data == data)	//为了安全将双亲结点的左孩子（或右孩子）质空，避免遍历时程序崩溃
+			s->lchild = NULL;
+		if (s->rchild != NULL && s->rchild->data == data)
+			s->rchild = NULL;
+		delete p; p = q = NULL;
+	}
+	else if (p->lchild != NULL && p->rchild == NULL)		//情况2，该数据所在结点有左孩子没有右孩子
+	{
+		BinaryTreeNode<DataType> * q = p->lchild;
+		p->data = p->lchild->data; 
+		p->lchild = p->lchild->lchild; p->rchild = p->lchild->rchild;
+		delete q;
+	}
+	else if (p->rchild != NULL && p->lchild == NULL)		//情况3，该数据所在结点有右孩子没有左孩子
+	{
+		BinaryTreeNode<DataType> * q = p->rchild;
+		p->data = p->rchild->data;
+		p->lchild = p->rchild->lchild; p->rchild = p->rchild->rchild;
+		delete q;
+	}
+	else if (p->lchild != NULL && p->rchild != NULL)		//情况4，该数据所在结点既有左孩子也有右孩子
+	{
+		BinaryTreeNode<DataType> * q = p,*s = p->lchild;
+		while (s->rchild)					//找到要删除节点的前趋
+		{
+			q = s; s = s->rchild;
+		}
+		p->data = s->data;					//将前驱结点的值赋给要删除的节点，之后删除前驱结点即可
+		if (q != p)					
+			q->rchild = s->lchild;
+		if (q == p)
+			q->lchild = s->lchild;
+		delete s;
+	}
+
+	return true;
+}
+
+//查找节点
+template <class DataType>
+BinaryTreeNode<DataType> * SearchBinaryTree<DataType>::SearchNode(BinaryTreeNode<DataType> * &p, DataType data)
+{
+	if (p == NULL || p->data == data)
+		return p;
+	if (data < p->data)
+		return SearchNode(p->lchild,data);
+	if (data > p->data)
+		return SearchNode(p->rchild,data);
+}
+
+int main2()
+{
+	int a[6] = {1,2,3,4,5,6,};
+	SearchBinaryTree<int> tree(a,6);
+	tree.TraverseTree();						 //遍历
+	cout << endl;
+	BinaryTreeNode<int> * node = tree.SearchNode(6); 		//查找元素6
+	if (node != NULL)
+		cout << node->data << endl;			
+	bool b = tree.DeleteNode(6);					//删除元素6
+	if (b == true)
+		tree.TraverseTree();
+	return 0;
+}

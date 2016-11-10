@@ -1,0 +1,176 @@
+//深度优先广度优先遍历
+#include<iostream>
+using namespace std;
+const int Maxsize = 10;
+struct ShortEdge
+{
+	int shortEdge[Maxsize];
+	int adjvex;
+	int lowcost;	
+}*shortEdge;
+class MGraph
+{
+public:
+	MGraph(char data[],int n,int e);//构造函数建立有n个顶点e条边的图
+	~MGraph(){}
+	void DFSTraverse(int v);//深度优先遍历图
+	void BFSTraverse(int v);//广度优先遍历图
+	friend void Prim(MGraph rap);
+private:
+	char vertex[Maxsize]; //存放图中顶点的数组
+	int arc[Maxsize][Maxsize];//存放图中边的数组
+	int visited[Maxsize];
+	int vertexNum,arcNum;//图的顶点数和边数
+};
+                               //构造函数
+MGraph::MGraph(char data[],int n,int e)
+{
+	int i, j,k,x;
+	vertexNum = n; arcNum = e;
+	for( i = 0;i < vertexNum;i++)
+	{
+		vertex[i] = data[i];
+	}
+	for(i = 0;i < vertexNum;i++)//初始化临接矩阵均为0
+	{
+		for(j = 0;j < vertexNum;j++)
+		{
+            arc[i][j] = 0;
+		}
+	}
+	for(k = 0;k < arcNum;k++)//依次输入每一条边
+	{
+       cin>>i>>j;            //输入边依附的两个顶点的编号
+	   arc[i][j] = 1; arc[j][i] = 1; //置有边标志为1
+	}
+	for(x =0;x<vertexNum;x++)
+	{
+		visited[x] = 0;
+	}
+}
+                             //深度优先遍历
+void MGraph::DFSTraverse(int v)
+{
+	 
+	cout<<vertex[v]; visited[v] = 1;
+	for(int j = 0;j < vertexNum;j++)
+	{
+		if(arc[v][j] == 1 && visited[j] == 0)
+			DFSTraverse(j);
+	}
+}
+                              //广度优先遍历
+void MGraph::BFSTraverse(int v)
+{
+	int Q[20] = {0};
+    int front = -1; int rear = -1;//初始化队列
+	cout<<vertex[v]; visited[v] = 1; Q[++rear] = v;//被访问的顶点入队
+	while(front != rear)
+	{
+		v = Q[++front];          //将对头元素出队并送到v中
+        for(int j = 0;j < vertexNum;j++)
+		{
+            if(arc[v][j] == 1 && visited[j] == 0)
+			{
+				cout<<vertex[j];
+				visited[j] = 1;
+				Q[++rear] = j;
+			}
+		}
+	}
+}
+
+int main()
+{
+        MGraph rap("ABCD",4,4);
+	void Prim();
+	cout<<"图的广度遍历:"<<endl;
+        rap.BFSTraverse(0); cout<<endl;
+        cout<<"图的深度遍历:"<<endl;
+	rap.DFSTraverse(0); cout<<endl;
+	return 0;
+}
+
+
+
+//Prim最小生成树
+#include<iostream>
+# include <conio.h>
+using namespace std;
+const int INFINITY = 9999;
+const int  maxlen = 10;
+typedef struct
+{
+ char vexs[maxlen][maxlen];  //顶点信息
+ int vexnum,arcnum;        //顶点数和边数
+ int arcs[maxlen][maxlen];//邻接矩阵
+}MGraph;
+     
+int LocateVex(MGraph g,char u[maxlen]) //比较输入的结点名
+{
+    for(int i=0;i<g.vexnum;++i)
+    if(strcmp(u,g.vexs[i])==0)
+    return i;
+    return -1;
+}
+void Prim(MGraph g)
+{
+  int i,j,k,min,flag;
+  int lowcost[maxlen];//权值
+  int closet[maxlen];//最小生成树结点
+  g.vexnum=6;//初始化邻接矩阵顶点和边数
+  g.arcnum=10;
+  cout<<"输入顶点信息:"<<endl;
+  for(j=0;j<g.vexnum;j++)
+      cin>>g.vexs[j];
+  for(i=0;i<g.vexnum;i++)
+      for(j=0;j<g.vexnum;j++)//初始化邻接矩阵
+       {
+          g.arcs[i][j]=INFINITY;  //任意两个顶点间距离为无穷大。
+       }
+          g.arcs[0][1]=6; g.arcs[1][0]=6;        
+          g.arcs[0][2]=1; g.arcs[2][0]=1;         
+          g.arcs[0][3]=5; g.arcs[3][0]=5;          
+          g.arcs[1][2]=5; g.arcs[2][1]=5;        
+          g.arcs[1][4]=3; g.arcs[4][1]=3;         
+          g.arcs[2][3]=5; g.arcs[3][2]=5;          
+          g.arcs[2][4]=6; g.arcs[4][2]=6;        
+          g.arcs[2][5]=4; g.arcs[5][2]=4;
+          g.arcs[3][5]=2; g.arcs[5][3]=2;          
+          g.arcs[4][5]=6; g.arcs[5][4]=6;            
+  cout<<"最小生成树的边为:"<<endl;
+  for(i=1;i<g.vexnum;i++)
+   {
+   lowcost[i]=g.arcs[0][i];
+    closet[i]=1;
+   }
+  closet[0]=0; //初始v1是属于集合U的
+  j=1;         
+  for(i=1;i<g.vexnum;i++)
+   {
+     min=lowcost[j];
+     k=i;
+     for(j=1;j<g.vexnum;j++)
+       if(lowcost[j]<min && closet[j]!=0)
+        {
+           min=lowcost[j];
+           k=j;   //记录当前要加入集合U的节点号
+         }
+      if(i==1) flag=0;
+      else flag=closet[k]; 
+      closet[k]=0;         //将刚刚找到的点加入到集合U中
+      cout<<"("<<g.vexs[k]<<","<<g.vexs[flag]<<")"<<" ";//输出刚刚找到的最小生成树树枝
+      for(j=1;j<g.vexnum;j++)
+       if((g.arcs[k][j]<lowcost[j]) && closet[j]!=0)
+           {
+            lowcost[j]=g.arcs[k][j];        
+            closet[j]=k;
+          }
+     }
+}
+int main()
+{
+	MGraph g;
+	Prim(g);
+	return 0;
+}

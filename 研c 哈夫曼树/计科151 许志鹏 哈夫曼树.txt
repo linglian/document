@@ -1,0 +1,202 @@
+#include<iostream>
+using namespace std;
+/*
+20161022
+HuffmanNode:哈弗曼树的结点，weight储存权值，lchildnum存左孩子的下标
+            rchildnum存右孩子的下标，parentnum存双亲下标
+*/
+class HuffmanNode
+{
+private:
+	int weight;
+	int lchildnum;
+	int rchildnum;
+	int parentnum;
+public:
+	/*
+	各种set与get函数
+	*/
+	int getWeight()
+	{
+		return weight;
+	}
+	int getRchildNum()
+	{
+		return rchildnum;
+	}
+	int getLchildNum()
+	{
+		return lchildnum;
+	}
+	int getParentNum()
+	{
+		return parentnum;
+	}
+	void setLchildNum(int l)
+	{
+		lchildnum = l;
+	}
+	void setRchildNum(int r)
+	{
+		rchildnum = r;
+	}
+	void setParentNum(int p)
+	{
+		parentnum = p;
+	}
+	void setWeight(int w)
+	{
+		weight = w;
+	}
+};
+class HuffmanTree
+{
+private:
+	HuffmanNode tree[100];
+	int size;
+	char* code;
+	int password[100];
+	int N;
+	int SelectMin(HuffmanNode t[], int n)
+	{
+		int min = -1;
+		for (int i = 0; i < n; i++)
+		{
+			if (t[i].getParentNum() == -1)
+			{
+				min = i;
+				for (int j = 0; j < n; j++)
+				{
+					if (t[j].getParentNum()==-1 && t[min].getWeight() > t[j].getWeight())
+						min = j;
+				}
+				return min;
+			}
+		}
+		return min;
+	}
+	int SelectSecond(HuffmanNode t[], int n)
+	{
+		return SelectMin(t, n);
+	}
+public:
+	//字符表：叶子节点的值，相当于根据发来的编码，对应的报文
+	//编码：发来的报文
+	//无参构造
+	HuffmanTree()
+	{
+		size = 0;
+		code = NULL;
+		N = -1;
+	}
+	//构造出字符表的构造方法
+	HuffmanTree(int w[],int n)
+	{
+		int i;
+		size = 0;
+		code = NULL;
+		N = -1;
+		for (i = 0; i < 2 * n - 1; i++)
+		{
+			tree[i].setLchildNum(-1);
+			tree[i].setRchildNum(-1);
+			tree[i].setParentNum(-1);
+			if (i < n)
+			{
+				tree[i].setWeight(w[i]);
+				size++;
+			}
+		}
+		int k;
+		for (k = size; k < 2 * n - 1; k++)
+		{
+			int i1 = SelectMin(tree, k);
+			if (i1 == -1)
+				break;
+			//cout << "i1= " << i1 << endl;
+			//cout << "tree[i1] = " << tree[i1].getParentNum() << endl;
+			tree[i1].setParentNum(k);
+			//cout << "tree[i1] = " << tree[i1].getParentNum() << endl;
+			int i2 = SelectSecond(tree, k);
+			if (i2 == -1)
+				break;
+			//cout << "i2= " << i2 << endl;
+			//cout << "tree[i1] = " << tree[i1].getParentNum() << endl;
+			tree[i2].setParentNum(k);
+			//cout << "tree[i1] = " << tree[i1].getParentNum() << endl;
+			tree[k].setWeight(tree[i1].getWeight() + tree[i2].getWeight());
+			tree[k].setLchildNum(i1);
+			tree[k].setRchildNum(i2);
+			size++;
+		}
+	}
+	//带编码，字符表的构造方法
+	HuffmanTree(int w[], int n, char code[])
+	{
+		this->code = code;
+		HuffmanTree(w, n);
+	}
+	int getSize()
+	{
+		return this->size;
+	}
+	void setCode(char code[])
+	{
+		this->code = code;
+	}
+	int* getPassword()
+	{
+		HuffmanNode r = tree[size-1];
+		N = -1;
+		for (int i = 0; code[i] != '\0'; i++)
+		{
+			if (r.getLchildNum() != -1 && r.getRchildNum() != -1)
+			{
+				if (code[i] == '0')
+				{
+					r = tree[r.getLchildNum()];
+				}
+				if (code[i] == '1')
+				{
+					r = tree[r.getRchildNum()];
+				}
+			}
+			else
+			{
+				i--;
+				password[++this->N] = r.getWeight();
+				r = tree[size - 1];
+			}
+		}
+		return password;
+	}
+	int getN()
+	{
+		return this->N;
+	}
+};
+int main()
+{
+	int Num[100],i=0,temp;
+	cout << "请输入字符表:";
+	for (i = 0;; i++)
+	{
+		cin >> temp;
+		if (temp == -1)
+			break;
+		Num[i] = temp;
+	}
+	char code[100];
+	cout << "输入编码：";
+	cin >> code;
+	HuffmanTree* tree = new HuffmanTree(Num, i);
+	tree->setCode(code);
+	tree->getPassword();
+	cout << tree->getN() << endl;
+	int* a = tree->getPassword();
+	for (int j = 0; j < tree->getN()+1; j++)
+	{
+	    cout << a[j] << " " ;
+	}
+	return 0;
+}

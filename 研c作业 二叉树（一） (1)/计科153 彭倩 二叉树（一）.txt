@@ -1,0 +1,406 @@
+#include<iostream>
+#include<queue> 
+using namespace std;
+/*类binaryTreeNode:设计思路
+*用指针的表示方法表示二叉树，每个元素用一个结点表示，一个结点包括leftChild,
+*rightChild两个指针域，还有一个数据域element. 
+*三个构造函数的实现代码。第一个无参数，两个指针域赋为空；第二个有一个参数，
+*可用来初始化element,而指针域被置为空；第三个有3个参数，可用来初始化3个域 
+*/ 
+template <class E>
+class binaryTreeNode
+{
+	public:
+	E element;
+	binaryTreeNode<E> *leftChild;
+	binaryTreeNode<E> *rightChild;          					 //左子树，右子树 
+	binaryTreeNode(){
+		leftChild = rightChild = NULL;
+	}
+	binaryTreeNode(E theElement){
+		element = theElement;
+		leftChild = rightChild = NULL;
+	}
+	binaryTreeNode(E theElement,binaryTreeNode *theLeftChild,binaryTreeNode *theRightChild){
+		element = theElement;
+		leftChild = theLeftChild;
+		rightChild = theRightChild;		
+	}
+};
+
+/*
+*类CirQueue:设计思路：复写pop()方法，方便后续操作取值。
+*
+*
+*/
+const int QueueSize = 100;
+template<class E>                     							//队列类 
+class CirQueue{
+	public:
+		CirQueue(){
+			front = rear = QueueSize-1;
+		}
+		~CirQueue(){}
+		void push(E e){
+			if((rear+1)%QueueSize == front){
+				throw "上溢";
+			}
+			rear = (rear+1)%QueueSize;
+			data[rear] = e;
+		}
+		E pop(){
+			if(rear == front){
+				throw "下溢";
+			}
+			front = (front+1)%QueueSize;
+			return data[front];
+		}
+		bool Empty(){
+			return front==rear?true:false;
+		}
+	private:
+		E data[QueueSize];
+		int front,rear;
+			
+}; 
+
+//二叉树的抽象类，用于继承
+template<class E>
+class binaryTree
+{
+	public:
+		virtual ~binaryTree(){}
+		virtual bool empty()= 0;
+		virtual int size()= 0;
+		virtual void preOrder(binaryTreeNode<E> *) = 0;
+		virtual void inOrder(binaryTreeNode<E> *) = 0;
+		virtual void postOrder(binaryTreeNode<E> *) = 0;
+		virtual void levelOrder(binaryTreeNode<E> *) = 0; 
+};
+
+
+template<class E>
+class linkedBinaryTree:public binaryTree<E>								//公有继承类binaryTree 
+{
+	public:
+		linkedBinaryTree(){root = Creat(root);treeSize = 0;}    		//构造函数，建立一棵二叉树 
+		~linkedBinaryTree(){destroy(root);}            					//析构函数 
+		void destroy(binaryTreeNode<E>* bt){							//销毁二叉树，并释放结点空间 
+			if(bt->leftChild == NULL){
+				return ;
+			}else{
+				destroy(bt->rightChild);
+			}
+			if(bt->rightChild != NULL){
+				return ;
+			}else{
+				destroy(bt->rightChild);
+			}
+			delete bt;
+			bt = NULL;
+		}
+		binaryTreeNode<E>* getRoot(){return root;}           			//得到私有成员根结点的方法 （由于root是私有成员） 
+		bool empty(){return treeSize == 0;}             			//判断树是否为空 
+		int size(){                 						//统计总结点的个数 
+			return size(root)-1;
+		}
+		bool isComplete(binaryTreeNode<E> *t){             			//判断树是否为完全二叉树 
+			/*
+			*方法思路 
+			*判断是否为完全二叉树
+			*任意一个二叉树都可以补成一个满二叉树。这样中间就会有很多空洞 
+			*先进行广度优先遍历（层次遍历），并把NULL节点放入队列
+			*/ 
+			CirQueue<binaryTreeNode<E>*> q;
+			binaryTreeNode<E> *temp;
+			q.push(root);
+			while((temp = q.pop()) != NULL){   //如果为完全二叉树即，这些空洞全部在层序遍历的末尾 
+				q.push(temp->leftChild);
+				q.push(temp->rightChild);
+			}
+			while(!q.Empty()){ //我们遍历到空洞时，如果空洞后面还有非空的值，则不为完全二叉树，返回false 
+				temp = q.pop();
+				if(temp != NULL){
+				return false;
+				}
+			}
+			return true;
+		}	
+		void preOrder(binaryTreeNode<E> *t){					//前序遍历 
+			if(t != NULL){
+				cout<<t->element<<" ";
+				preOrder(t->leftChild);
+				preOrder(t->rightChild);
+			} 
+		} 
+		void inOrder(binaryTreeNode<E> *t){					//中序遍历 
+			if(t != NULL) {
+				inOrder(t->leftChild);
+				cout<<t->element<<" ";
+				inOrder(t->rightChild);	 
+			}
+		} 
+		void postOrder(binaryTreeNode<E> *t){
+			if(t != NULL){							//后序遍历 
+				postOrder(t->leftChild);
+				postOrder(t->rightChild);
+				cout<<t->element<<" ";	
+			} 
+		} 
+		void levelOrder(binaryTreeNode<E> *t){  				//层序遍历 
+			const int MaxSize = 100; 
+			int front = -1;
+			int rear = -1;
+			binaryTreeNode<E>* Q[MaxSize];
+			binaryTreeNode<E>* q;
+			if(t == NULL){
+				return ;
+			}else{
+			Q[++rear] = root;
+			while(front != rear){
+				q = Q[++front];
+				cout<<q->element<<" ";
+					if(q->leftChild != NULL){
+						Q[++rear] = q->leftChild;
+					}
+					if(q->rightChild != NULL){
+						Q[++rear] = q->rightChild;
+					}
+				}
+			}
+	
+		} 
+		binaryTreeNode<E>* Creat(binaryTreeNode<E> *t){				//二叉链表的建立 
+			char ch;
+    		cin>>ch;
+    		if(ch=='#')
+			{   
+				t=NULL;
+			}
+    		else
+    		{
+        		t=new binaryTreeNode<E>;
+        		t->element = ch;
+        		t->leftChild = Creat(t->leftChild);
+        		t->rightChild = Creat(t->rightChild);
+    		}
+    		return t;
+		}
+		void leavesNode(binaryTreeNode<E>* t){					//统计叶子结点个数
+			/*
+			*方法思路： 
+			*利用前序遍历额的思路：根左右，去找寻左右子树皆为空的叶子节点
+			*
+			*/ 
+			if(t == NULL){
+				return;
+			}
+			if(t->leftChild == NULL && t->rightChild == NULL){
+				count++;						//叶子结点记数++ 
+			}else{
+				leavesNode(t->leftChild);
+				leavesNode(t->rightChild);
+			}
+		}
+		int getCount(){								//获取叶子结点个数 
+			return count;
+		}
+		int deep(binaryTreeNode<E> *t){              				//求二叉树的深度 
+		 	if(t==NULL)
+       			return 0;
+    		else{  								
+				/* 
+				*方法思路： 
+				*递归遍历二叉树的左子树和右子树的深度，如果左子树比右子树深，则返回左子树深度+1，否则右子树深度+1
+				*/ 
+       			/*
+				if(deep(t->leftChild) > deep(t->rightChild))
+           			return deep(t->leftChild)+1;
+       			else
+           			return deep(t->rightChild)+1;
+				*/
+           		return deep(t->leftChild) > deep(t->rightChild)?deep(t->leftChild)+1:deep(t->rightChild)+1; 
+    	}
+	}
+		
+		binaryTreeNode<E>* parent(E e){    					//递归查找 
+			CirQueue<binaryTreeNode<E>*> q;
+			if(root != NULL){
+				q.push(root);      					//树根入队 
+				while(!q.Empty()){      				//当队不空 
+					binaryTreeNode<E>* a = q.pop();     		//出队
+					if((a->leftChild!=NULL&&a->leftChild->element == e) || (a->rightChild != NULL&&a->rightChild->element == e)){				//比较e是否为出队元素的左孩子或右孩子 
+						return a; 
+					}else{
+						if(a->leftChild){
+							q.push(a->leftChild);
+						}
+						if(a->rightChild){
+							q.push(a->rightChild);
+						}
+					}
+				}
+			}
+			return NULL;
+		}
+		
+	private:
+		binaryTreeNode<E> *root;               					//指向根节点的指针 
+		int treeSize;                     					//树的大小 
+		int count;								//叶子结点个数 
+		int size(binaryTreeNode<E> *t){         				//统计总结点个数 
+			if(t==NULL){
+				return 1;
+			}else{
+				return size(t->leftChild)+size(t->rightChild); 
+			}
+		}
+};
+
+	
+int main()
+{
+	cout<<"请建立二叉树"<<endl;
+	linkedBinaryTree<char> *bt = new linkedBinaryTree<char>();
+	binaryTreeNode<char>* root = bt->getRoot();
+	cout<<"总结点个数为："<<endl;
+	cout<<bt->size()<<endl;
+	cout<<"叶子结点个数"<<endl;
+	bt->leavesNode(root); 
+	cout<<bt->getCount()<<endl;
+	cout<<"二叉树深度为"<<endl;
+	cout<<bt->deep(root)<<endl;
+	cout<<"是否为完全二叉树"<<endl;
+	if(bt->isComplete(root)){
+		cout<<"true"<<endl;
+	}else{
+		cout<<"false"<<endl;
+	}
+	cout<<"判断该元素E是否存在双亲结点，若存在则输出该双亲结点元素值"<<endl;
+	char element;
+	cin>>element;
+	cout<<bt->parent(element)->element<<endl;
+	return 0;
+}
+
+
+
+//线索链表的中序遍历
+#include<iostream>
+using namespace std;
+
+template<class DataType>
+struct ThrNode{
+	DataType data;
+	ThrNode<DataType> *lchild,*rchild;
+	int ltag,rtag;
+}; 
+
+template<class DataType>
+class InThrBiTree{
+	public:
+		ThrNode<DataType> *pre;
+		InThrBiTree();       										//构造函数，建立中序线索链表 
+		~InThrBiTree(){}											//析构函数 
+		ThrNode<DataType>* Next(ThrNode<DataType> *p);				//查找结点p的后继 
+		void InOrder();												//中序遍历线索链表 
+	private:
+		ThrNode<DataType> *root;									//指向线索链表的头指针 
+		ThrNode<DataType> *Creat(ThrNode<DataType> *bt);			//构造函数调用 
+		void ThrBiTree(ThrNode<DataType> *bt);			//构造函数调用 
+};
+template<class DataType>
+ThrNode<DataType>* InThrBiTree<DataType>::Creat(ThrNode<DataType>* bt){
+	char ch;
+	cin>>ch;
+	if(ch == '#'){
+		bt = NULL;												//建立一棵空树 
+	}else{
+		bt = new ThrNode<DataType>;									//生成一个结点 
+		bt->data = ch;
+		bt->ltag = 0;												//左右标志均置为0 
+		bt->rtag = 0;
+		bt->lchild = Creat(bt->lchild);								//递归建立左子树 
+		bt->rchild = Creat(bt->rchild); 							//递归建立右子树 
+	}
+	return bt;
+}
+template<class DataType>
+void InThrBiTree<DataType>::ThrBiTree(ThrNode<DataType>* bt){
+	if(bt == NULL){
+		return ;
+	}
+	ThrBiTree(bt->lchild);
+	if(bt->lchild == NULL){											//对bt的左指针进行处理 
+		bt->ltag = 1;
+		bt->lchild = pre;											//设置pre的前驱线索 
+	}
+	if(bt->rchild == NULL){
+		bt->rtag = 1;												//对bt的右指针进行处理 
+	} 
+	if(pre!=NULL&&pre->rtag == 1){
+		//cout<<bt->lchild<<' '<<bt->ltag<<' '<<bt->data<<' '<<bt<<' '<<bt->rtag<<' '<<bt->rchild<<endl;
+		//cout<<pre->lchild<<' '<<pre->ltag<<' '<<pre->data<<' '<<pre<<' '<<pre->rtag<<' '<<pre->rchild<<endl;
+		pre->rchild = bt;											//设置pre的后继线索 
+	}
+	pre = bt;
+	ThrBiTree(bt->rchild);
+}
+
+template<class DataType>
+InThrBiTree<DataType>::InThrBiTree(){
+	root = Creat(root);												//建立带有线索标志的二叉链表 
+	pre = NULL;														//当前访问结点的前驱结点pre初始化为null 
+	ThrBiTree(root);											//遍历二叉链表，建立线索 
+} 
+
+template<class DataType>
+ThrNode<DataType>* InThrBiTree<DataType>::Next(ThrNode<DataType>* p){
+	ThrNode<DataType>* q = NULL;
+	if(p->rtag == 1){												//右标志为1，可直接得到后继结点 
+		q = p->rchild;
+	}else{
+		q = p->rchild;												//工作指针q指向结点p的右孩子 
+		while(q->ltag == 0)											//查找最左下结点 
+			q = q->lchild; 
+	}
+	return q;
+}
+
+template<class DataType>
+void InThrBiTree<DataType>::InOrder(){
+	ThrNode<DataType>* p;
+	if(root == NULL){												//如果线索为空，则空操作返回0 
+		return ;
+	}
+	p = root;
+	while(p->lchild!=NULL&&p->ltag == 0){											//查找中序遍历序列的第一个结点p 
+		p = p->lchild;
+	}
+	while(p!= NULL){	
+		cout<<p->data<<" ";										//当结点p存在后继，依次访问其后继结点 
+		p = Next(p);
+	}
+}
+
+int main(){
+	InThrBiTree<char> bt;
+	bt.InOrder();
+	return 0;
+}
+
+
+
+
+//测试用例			A B # # C D # E # F # # G H # I K # # # #
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,365 @@
+1.图的深度和广度优先遍历
+#include <iostream>
+using namespace std;
+
+static int visited[100]={0};
+
+class MGraph
+{
+public:
+	MGraph();
+	void DFSTraverse(int n);
+	void BFSTraverse(int n);
+	void PrintArc();
+private:
+	int vertexNum, arcNum;
+	char vertex[100];
+	int arc[100][100];
+
+};
+
+MGraph::MGraph()
+{
+    int l,h;
+    cin >> vertexNum>>arcNum;
+    for(int i=0;i<vertexNum;i++)
+        cin>>vertex[i];
+    for(int i=0;i<arcNum;i++)
+        for(int j=0;j<arcNum;j++)
+            arc[i][j]=0;
+    for(int i=0;i<arcNum;i++)
+    {
+        cin>>l>>h;
+        arc[l][h]=1;
+        arc[h][l]=1;
+    }
+}
+
+void MGraph::PrintArc()
+{
+    for(int i=0;i<vertexNum;i++)
+    {
+            for(int j=0;j<vertexNum;j++)
+            {
+            cout << arc[i][j];
+            }
+        cout <<endl;
+    }
+}
+
+void MGraph::DFSTraverse(int n)
+{
+    cout << vertex[n] << " ";
+    visited[n]=1;
+    for(int i=0;i<vertexNum;i++)
+        if(arc[n][i]==1&&visited[i]==0) DFSTraverse(i);
+    for(int i=0;i<vertexNum;i++)
+        if(visited[i]==0) DFSTraverse(i);
+}
+
+void MGraph::BFSTraverse(int n)
+{
+    int front,rear;
+    front = rear = -1;
+    cout << vertex[n] << " ";
+    visited[n]=1;
+    int *Q = new int[100];
+    Q[++rear]=n;
+    while(front!=rear)
+    {
+        n=Q[++front];
+       // cout << "n=" << n <<endl;
+        for(int i=0;i<vertexNum;i++)
+        if(arc[n][i]==1&&visited[i]==0){cout << vertex[i] << " ";Q[++rear]=i;visited[i]=1;}
+    }
+    for(int i=0;i<vertexNum;i++)
+    if(visited[i]==0) BFSTraverse(i);
+}
+
+int main()
+{
+	MGraph mg;
+    mg.PrintArc();
+    mg.DFSTraverse(0);
+    cout <<endl;
+    for(int i=0;i<100;i++)
+        visited[i] = 0;
+    mg.BFSTraverse(0);
+    cout << endl;
+	return 0;
+}
+
+2.图的最小生成树方法
+#include<iostream>
+using  namespace std;
+/*测试数据:
+6 10
+1 2 3 4 5 6
+1 2 6
+1 3 1
+1 4 5
+2 3 5
+2 5 3
+3 4 5
+3 5 6
+3 6 4
+4 6 2
+5 6 6
+*/
+const int Max = 100;
+static int MAXCOST = 999;
+
+class MGraph
+{
+public:
+    MGraph();
+    int prim();
+private:
+    int n,m;
+    int graph[Max][Max];
+    int vertex[Max];
+};
+MGraph::MGraph()
+{
+    int i, j, k;
+    int cost;
+    cin >> m >> n;
+    for(int i=1;i<=m;i++)
+        cin>> vertex[i];
+    for (i = 1; i <= m; i++)
+    {
+        for (j = 1; j <= m; j++)
+        {
+            graph[i][j] = MAXCOST;
+        }
+    }
+    for (k = 1; k <= n; k++)
+    {
+        cin >> i >> j >> cost;
+        graph[i][j] = cost;
+        graph[j][i] = cost;
+    }
+}
+int MGraph::prim()
+{
+    int lowcost[Max];
+    int mst[Max];
+    int i, j, min, minid, sum = 0;
+    for (i = 2; i <= m; i++)
+    {
+        lowcost[i] = graph[1][i];
+        mst[i] = 1;
+    }
+    mst[1] = 0;
+    for (i = 2; i <= m; i++)
+    {
+        min = MAXCOST;
+        minid = 0;
+        for (j = 2; j <= m; j++)
+        {
+            if (lowcost[j] < min && lowcost[j] != 0)
+            {
+                min = lowcost[j];
+                minid = j;
+            }
+        }
+        cout << "V" << mst[minid] << " V" << minid << "  " << min << endl;
+        sum += min;
+        lowcost[minid] = 0;
+        for (j = 2; j <= m; j++)
+        {
+            if (graph[minid][j] < lowcost[j])
+            {
+                lowcost[j] = graph[minid][j];
+                mst[j] = minid;
+            }
+        }
+    }
+    return sum;
+}
+
+int main()
+{
+    MGraph mg;
+    cout << "最小权值和=" << mg.prim() << endl;
+    return 0;
+}
+3.图的最短路径算法(Dijkstra)
+#include <iostream>
+#include <string>
+/*
+5 7
+a b c d e
+0 1 10
+0 3 30
+0 4 100
+1 2 50
+2 4 10
+3 2 20
+3 4 60
+*/
+using namespace std;
+const int MaxSize = 100;
+const int minNum = 999;
+class MGraph
+{
+public:
+    void Dijkstra(int v);
+    MGraph();
+private:
+    int arc[MaxSize][MaxSize];
+    string vertex[10];
+    int vertexNum,arcNum;
+};
+MGraph::MGraph()
+{
+    int x;
+    cin>>vertexNum>>arcNum;
+    for(int i=0;i<vertexNum;i++)
+        cin >> vertex[i];
+    for(int i=0;i<arcNum;i++)
+    for(int j=0;j<arcNum;j++)
+            arc[i][j]=999;
+    for(int k=0;k<arcNum;k++)
+    {
+        int i,j;
+        cin>>i>>j>>x;
+        arc[i][j]=x;
+        arc[j][i]=x;
+    }
+}
+void MGraph::Dijkstra(int v)
+{
+    int s[MaxSize];
+    int dist[MaxSize];
+    int num,k,i;
+    string path[MaxSize];
+    for(int i=0;i<vertexNum;i++)
+    {
+        dist[i]=arc[v][i];
+        if(dist[i]!=999)path[i]=vertex[v]+vertex[i];
+        else path[i]="";
+    }
+    s[0]=v;
+    dist[v]=0;
+    num=1;
+    while(num<vertexNum)
+    {
+        int Min=minNum;
+        for(i=0;i<vertexNum;i++)
+           // for(k=0;k<vertexNum;k++)
+            if(Min>dist[i]&&dist[i]!=0){Min=dist[i]; k=i;}
+        cout<< dist[k] <<" "<< path[k]<<endl;
+        s[num++]=k;
+        for(int i=0;i<vertexNum;i++)
+        if(dist[i]>dist[k]+arc[k][i]){
+            dist[i]=dist[k]+arc[k][i];
+            path[i]=path[k]+vertex[i];
+        }
+        dist[k]=0;
+    }
+}
+int main()
+{
+    MGraph mg;
+    mg.Dijkstra(0);
+    return 0;
+
+}
+
+4.图的拓扑排序方法
+#include <iostream>
+#include <queue>
+using namespace std;
+const int MaxSize = 10;
+static int visited[MaxSize]={0};
+static queue<int> Q;
+static int flag = 0;
+struct ArcNode
+{
+    int adjvex;
+    ArcNode *next;
+};
+struct VertexNode
+{
+    int in;
+    int vertex;
+    ArcNode *firstedge;
+};
+class ALGraph
+{
+public:
+    ALGraph();
+    void TopSort();
+private:
+    VertexNode adjlist[MaxSize];
+    int vertexNum,arcNum;
+};
+ALGraph::ALGraph()
+{
+    int i,j;
+    int a[MaxSize];
+    int n,e;
+    cin>>n>>e;
+    for(int i=0;i<n;i++)
+        cin>>a[i];
+    vertexNum = n;
+    arcNum = e;
+    for(int i =0;i<vertexNum;i++)
+    {
+        adjlist[i].in=0;
+        adjlist[i].vertex=a[i];
+        adjlist[i].firstedge=NULL;
+    }
+    for(int k=0;k<arcNum;k++)
+    {
+        cin>>i>>j;
+        for(int l =0 ;l<vertexNum;l++)
+        {
+            if(adjlist[l].vertex==j)
+                adjlist[l].in++;
+        }
+        if(i!=j&&i<vertexNum&&j<vertexNum){
+        ArcNode *s;
+        s = new ArcNode;
+        s->adjvex=j;
+        s->next=adjlist[i].firstedge;
+        adjlist[i].firstedge=s;
+        }
+    }
+}
+void ALGraph::TopSort()
+{
+    int count = 0,j;
+    ArcNode *p;
+    for(int i=0;i<vertexNum;i++)
+        {
+            cout << "in" <<adjlist[i].in<<endl;
+            if(adjlist[i].in==0)
+            Q.push(i);
+        }
+        while(!Q.empty())
+        {
+            j=Q.front();
+            Q.pop();
+            cout << adjlist[j].vertex<< " ";
+            count++;
+            p=adjlist[j].firstedge;
+            while(p!=NULL)
+            {
+                int k;
+                k=p->adjvex;
+                adjlist[k].in--;
+                if(adjlist[k].in==0) Q.push(k);
+                p = p->next;
+            }
+        }
+        if(count<vertexNum) cout << "ÓÐ»ØÂ·";
+}
+int main()
+{
+    ALGraph ag;
+    ag.TopSort();
+    return 0;
+}
+5.图的关键路径算法

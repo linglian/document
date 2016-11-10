@@ -1,0 +1,354 @@
+// ConsoleApplication1.cpp : 定义控制台应用程序的入口点。
+//
+
+#include "stdafx.h"
+
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <fstream>
+#include <exception>
+#include <vector>
+#include <stack>
+
+
+using namespace std;
+
+template <class DataType>
+class HuffmanNode
+{
+public:
+	HuffmanNode(DataType data = NULL, int weight = -1)
+	{
+		this->data = data; this->weight = weight; //coding = -1;
+		lchild = -1; rchild = -1; parent = -1;
+	}
+	DataType data;
+	int weight;
+	int lchild, rchild, parent;
+};
+
+template <class DataType>
+class HuffmanTree
+{
+private:
+	vector<HuffmanNode<DataType> > huffman_tree;
+	int n;
+public:
+	HuffmanTree(vector<HuffmanNode<DataType> > &leafs);
+	HuffmanTree() {}
+	void SelectSmall(int &least, int &less,int i);					//查找最小节点
+	void Print();													//打印
+	string GetCoding(int i);										//获取编码
+	string CreatCoding(string str);									//生成整棵哈夫曼的编码并存储文件
+	bool SaveHuffmanTree(string filename);							//保存哈弗吗树
+	bool ReadHuffmanTree(string filename);							//读取哈夫曼树
+	string DeCoding(string code);									//反编译
+};
+
+template <class DataType>
+HuffmanTree<DataType>::HuffmanTree(vector<HuffmanNode<DataType> > &leafs)
+{
+	//①初始化
+	n = leafs.size();
+	huffman_tree.resize(2 * n - 1); 
+	// ②新建n个只有根节点的树
+	for (int i = 0; i < n; i++)
+	{
+		huffman_tree[i].data = leafs[i].data;
+		huffman_tree[i].weight = leafs[i].weight;
+		huffman_tree[i].parent = huffman_tree[i].lchild = huffman_tree[i].rchild = -1;
+	}
+	// ③进行n-1次合并（找到两个权值最小的树进行合并）
+	for (int i = n; i < 2 * n - 1; i++)
+	{
+		int least = 0, less = 0;
+		SelectSmall(least, less,i); 
+		huffman_tree[i].parent = -1;
+		huffman_tree[i].weight = huffman_tree[least].weight + huffman_tree[less].weight;
+		huffman_tree[i].lchild = least;  huffman_tree[i].rchild = less;
+		huffman_tree[least].parent = i; huffman_tree[less].parent = i;
+	}
+}
+
+template <class DataType>
+void HuffmanTree<DataType>::SelectSmall(int &least, int &less,int i)
+{
+	while (huffman_tree[least].parent != -1)
+		least++;
+	int min1 = huffman_tree[least].weight;
+	less = least + 1;
+	while (huffman_tree[less].parent != -1)
+		less++;
+	int min2 = huffman_tree[less].weight;
+	if (less < least)
+	{
+		int temp = less;
+		least = less;
+		less = least;
+	}
+	for (int j = 0; j < i; j++)
+	{
+		if (huffman_tree[j].parent == -1)    
+		{
+			if (huffman_tree[j].weight < min1 )
+			{
+				min2 = min1;    
+				less = least;  
+				min1 = huffman_tree[j].weight;
+				least = j;  
+			}
+			else if ((huffman_tree[j].weight >= min1) && (huffman_tree[j].weight < min2) && least != j)
+			{
+				min2 = huffman_tree[j].weight;
+				less = j;
+			}
+		}
+	}
+}
+
+template <class DataType>
+void HuffmanTree<DataType>::Print()
+{
+	cout << "编号" << "\t" << "元素" << "\t" << "频率" << "\t" << "双亲" << "\t" 
+		<< "左孩子" << "\t" << "右孩子" << endl;
+	for (int i = 0; i < 2 * n - 1; i++)
+	{
+		cout << i << "\t" << huffman_tree[i].data << "\t" << huffman_tree[i].weight 
+			<< "\t" << huffman_tree[i].parent << "\t" << huffman_tree[i].lchild << "\t" << huffman_tree[i].rchild << endl;
+	}
+}
+
+template <class DataType>
+string HuffmanTree<DataType>::GetCoding(int i)
+{
+	string s;
+	stack<char> stack;
+	int parent = huffman_tree[i].parent; 
+	while (parent != -1)
+	{
+		if (huffman_tree[parent].lchild == i)
+			stack.push('0');
+		if (huffman_tree[parent].rchild == i)
+			stack.push('1');
+		i = parent;
+		parent = huffman_tree[parent].parent;
+	}
+	while (!stack.empty())
+	{
+		s += stack.top();
+		stack.pop();
+	}
+	return s;
+}
+
+template <class DataType>
+string HuffmanTree<DataType>::CreatCoding(string str)
+{
+	string s;
+	for (int i = 0; i < str.size(); i++)
+	{
+		int j = 0;
+		while (str.at(i) != huffman_tree[j].data || str.at(i) == 32)
+			j++;
+		s += GetCoding(j);
+	}
+
+	ofstream out;
+	try 
+	{	
+		out.open("code.txt");
+		out << s;	
+		out.close();
+	}
+	catch (exception e)
+	{
+		out.close();
+		return NULL;
+	}
+	return s;
+}
+
+template <class DataType>
+bool HuffmanTree<DataType>::SaveHuffmanTree(string filename)
+{
+	ofstream out;
+	try
+	{
+		out.open("hufftree.txt");
+		out << n << endl;
+		for (int i = 0; i < 2 * n - 1; i++)
+		{
+			if (i < n)
+			{
+				if (huffman_tree[i].data == ' ')
+					out << 0;
+				else
+					out << huffman_tree[i].data;
+			}	
+			out << "\t" << huffman_tree[i].weight << "\t" << huffman_tree[i].lchild <<
+				"\t" << huffman_tree[i].rchild << "\t" << huffman_tree[i].parent << endl;
+		}
+	}
+	catch (exception e)
+	{
+		return false;
+	}
+	return true;
+}
+
+template <class DataType>
+bool HuffmanTree<DataType>::ReadHuffmanTree(string filename)
+{
+	ifstream in;
+	try
+	{
+		in.open(filename);
+		in >> n;
+		huffman_tree.resize(2 * n - 1);
+		for (int i = 0; i < 2 * n - 1; i++)
+		{
+			if (i < n)
+			{
+				char c; in >> c;
+				if (c == '0')
+					huffman_tree[i].data = ' ';
+				else
+					huffman_tree[i].data = c;
+			}
+				
+			else
+				huffman_tree[i].data = NULL;
+			in >> huffman_tree[i].weight 
+				>> huffman_tree[i].lchild >> huffman_tree[i].rchild >> huffman_tree[i].parent;
+		}
+	}
+	catch (exception e)
+	{
+		return false;
+	}
+	return true;
+}
+
+template <class DataType>
+string HuffmanTree<DataType>::DeCoding(string code)
+{
+	int root = huffman_tree.size() - 1;
+	string s = ""; int j = 0; int i = root;
+	while(j != code.size())
+	{
+		while (huffman_tree[i].lchild != -1 && huffman_tree[i].rchild != -1)
+		{
+			if (code.at(j) == 48)
+			{
+				i = huffman_tree[i].lchild;
+			}
+			if (code.at(j) == 49)
+			{
+				i = huffman_tree[i].rchild;
+			}
+			j++;
+		}
+		if (huffman_tree[i].data == NULL)
+			s += 32;	
+		else
+			s += huffman_tree[i].data; 
+		i = root;
+	}
+	return s;
+}
+
+template <class DataType>
+vector<HuffmanNode<DataType> > CreatHuffmanNode(DataType array[])
+{
+	int frequency[256] = { 0 };		//ASCII有256个
+	int i = 0;
+	while (array[i] != '\0')
+	{
+		if (array[i] == NULL)
+			frequency[32]++;
+		else
+			frequency[array[i]]++;
+		i++;
+	}
+	vector<HuffmanNode<DataType> > huffman_node;
+	for (int i = 0; i < 256; i++)
+	{
+		if (frequency[i] != 0)
+		{
+			HuffmanNode<DataType> temp(i, frequency[i]);
+			huffman_node.push_back(temp);
+		}
+	}
+	return huffman_node;
+}
+
+string ReadFile(string filename)
+{
+	string s,temp;
+	ifstream in;
+	try
+	{
+		in.open(filename);
+		while (getline(in, temp))
+			s += temp;
+	}
+	catch (exception e)
+	{
+		return NULL;
+	}
+	return s;
+}
+
+bool WriteFile(string filename,string file)
+{
+	ofstream out;
+	try
+	{
+		out.open(filename);
+		out << file;
+	}
+	catch (exception e)
+	{
+		return false;
+	}
+	return true;
+}
+
+int main()
+{
+	//-----------------新建哈夫曼树（编码文件code.txt,哈夫曼树文件hufftree.txt）----------------	
+/*	vector<HuffmanNode<char> > node = CreatHuffmanNode<char>("aabdcccdc6");
+	cout << "要存储的字符串为aabdcccdc6" << endl;
+	HuffmanTree<char> huffman_tree(node);
+	cout << "新建哈夫曼树：" << endl;
+	huffman_tree.Print();
+	string s = huffman_tree.CreatCoding("aabdcccdc6");
+	cout << "编码成功" << endl;
+	cout << s << endl;
+	bool b = huffman_tree.SaveHuffmanTree("hufftree.txt");
+	if (b == true)
+		cout << "----------保存哈夫曼树成功！----------" << endl;
+	else
+		cout << "----------读取哈夫曼树失败！----------" << endl;*/
+
+	//-----------------解码哈夫曼树（通过code.txt和hufftree.txt）--------------------------------
+	HuffmanTree<char> huffman_tree;
+	bool b = huffman_tree.ReadHuffmanTree("hufftree.txt");
+	if (b == true)
+	{
+		cout << "----------读取哈夫曼树成功！----------" << endl;
+		huffman_tree.Print();
+		string s = ReadFile("code.txt");
+		if (!s.empty())
+		{
+			cout << "----------读取编码成功！----------" << endl;
+			cout << s << endl;
+			cout << "译码结果为：" << endl << huffman_tree.DeCoding(s);
+		}	
+		else
+			cout << "----------读取编码失败！----------" << endl;
+	}
+	
+	return 0;
+}

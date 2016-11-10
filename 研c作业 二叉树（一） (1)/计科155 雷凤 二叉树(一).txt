@@ -1,0 +1,340 @@
+//二叉树的建立
+
+#include<iostream>
+using namespace std;
+struct BiNode
+{
+     char data;
+	 BiNode *lchild,*rchild;
+};
+class BiTree
+{
+public:
+	BiTree(){ count =0; root =Creat(root);}//构造函数
+	~BiTree(){Release(root);}        //析构函数
+	void PreOrder(){PreOrder(root);}//前序遍历
+	void InOrder(){InOrder(root);} //中序遍历
+	void PostOrder(){PostOrder(root);}//后序遍历
+	void LeverOrder();     //层序遍历
+	int HowData(){HowData(root);return count;}//打印叶子节点数
+	int Dapth(){return Dapth(root);}//打印树深度
+	int Complate(){Complate(root); return count;}//判断是否为完全二叉树
+	char PerentData(char x){ char temp = PerentData(root,x); return temp;}//打印双亲结点
+private:
+	int count;
+	BiNode *root;
+	BiNode *Creat(BiNode *bt);
+	void Release(BiNode *bt);
+	void PreOrder(BiNode *bt);
+	void InOrder(BiNode *bt);
+	void PostOrder(BiNode *bt);
+	int HowData(BiNode *bt);
+	int Dapth(BiNode *bt);
+	int Complate(BiNode *bt);
+	char PerentData(BiNode *bt,char x);
+};
+            //构造函数
+BiNode *BiTree::Creat(BiNode *bt)
+{
+	char ch;
+	cin>>ch;
+	if(ch =='#') bt =NULL;
+	else
+	{
+		bt =new BiNode; bt->data =ch;
+		bt->lchild =Creat(bt->lchild);
+		bt->rchild =Creat(bt->rchild);
+	}
+	return bt;
+}
+          //析构函数
+void BiTree::Release(BiNode *bt)
+{
+	if(bt !=NULL)
+	{
+		Release(bt->lchild);
+		Release(bt->rchild);
+		delete bt;
+	}
+}
+             //前序遍历
+void BiTree::PreOrder(BiNode *bt)
+{
+	if(bt ==NULL) return ;
+	else
+	{
+		cout<<bt->data;
+		PreOrder(bt->lchild);
+		PreOrder(bt->rchild);
+	}
+}
+           //中序遍历
+void BiTree::InOrder(BiNode *bt)
+{
+	if(bt ==NULL) return ;
+	else
+	{
+		InOrder(bt->lchild);
+		cout<<bt->data;
+		InOrder(bt->rchild);
+	}
+}
+            //后续遍历
+void BiTree::PostOrder(BiNode *bt)
+{
+	if(bt ==NULL) return ;
+	else
+	{
+		PostOrder(bt->lchild);
+		PostOrder(bt->rchild);
+		cout<<bt->data;
+	}
+}
+              //层序遍历
+void BiTree::LeverOrder()
+{
+	BiNode *Q[100];
+	BiNode *q;
+	int front =0;
+	int rear =0;
+	if(root ==NULL)
+	{
+		cout<<"None"<<endl;
+		return ;
+	}
+	Q[++rear] =root;
+	while(front !=rear)
+	{
+		q =Q[++front];
+		cout<<q->data;
+		if(q->lchild !=NULL) Q[++rear] =q->lchild;
+		if(q->rchild !=NULL) Q[++rear] =q->rchild;
+	}
+
+}
+          //打印叶子节点数
+int BiTree::HowData(BiNode *bt)
+{
+	if(bt !=NULL)
+    {
+		if((bt->lchild ==NULL )&&(bt->rchild ==NULL))
+		{
+			count++;  
+			cout<<bt->data;
+		}
+		HowData(bt->lchild);
+        HowData(bt->rchild);		
+	}
+   return count;
+}
+            //打印深度
+int BiTree::Dapth(BiNode *bt)
+{
+    int lh,rh,max;
+	if(bt ==NULL) return 0;
+	else
+    {
+		lh =Dapth(bt->lchild);
+		rh =Dapth(bt->rchild);
+		max =lh >rh? lh:rh;
+		return (max+1);
+	}	
+}
+            //判断是否为完全二叉树
+int BiTree::Complate(BiNode *bt)
+{
+	int const MaxSize =100;
+	int front =-1;
+	int rear =-1;
+	int x =1,y =1;
+	BiNode *q;
+	BiNode *Q[MaxSize];
+	if(root ==NULL) return 0;
+		Q[++rear] =root;
+	while(front !=rear)
+	{
+	   q =Q[++front];
+	   if(bt->lchild ==NULL)
+	   {
+		   x =0;//标记
+		   if(bt->rchild !=NULL)
+			 y =0;
+	   }
+	   else
+	   {
+		   y = x;
+           Q[++rear] =bt->lchild;
+		   if(bt->rchild ==NULL) x =0;
+		   else
+		   {
+			   Q[++rear] =bt->rchild;
+		   }
+        return y;
+	   }
+	  
+	}
+return 1;
+}
+
+            //打印双亲结点
+char BiTree::PerentData(BiNode *bt,char x)
+{ 
+	char temp;
+	if(root ==NULL) { cout<<"NULL"<<endl;return NULL;}
+	if(root->data ==x) {cout<<"NULL"<<endl;return NULL;}
+   if(bt !=NULL)
+   {
+	   if((bt->lchild !=NULL && bt->lchild->data ==x) ||
+          ( bt->rchild !=NULL && bt->rchild->data ==x))
+		  return bt->data;
+	   if(bt->lchild !=NULL)
+		   temp = PerentData(bt->lchild,x);
+	   if(bt->rchild !=NULL) 
+		   temp =PerentData(bt->rchild,x);
+   }
+   return temp;
+}
+
+int main()
+{
+	BiTree tree;
+	cout<<"前序遍历:"<<endl;
+	tree.PreOrder(); cout<<endl;
+	cout<<"中序遍历:"<<endl;
+	tree.InOrder(); cout<<endl;
+	cout<<"后序遍历:"<<endl;
+	tree.PostOrder(); cout<<endl;
+	cout<<"层序遍历:"<<endl;
+	tree.LeverOrder(); cout<<endl;
+	int count =tree.HowData();	
+   	cout<<endl;
+    cout<<"叶子节点个数:"<<count<<endl;
+	int num =1;
+	num =tree.Dapth();
+   	cout<<"树的深度:"<<num<<endl;
+	int len =tree.Complate();
+	if(len) 
+		cout<<"此为完全二叉树"<<endl;
+	else  
+		cout<<"此为非完全二叉树"<<endl;
+	cout<<"输入结点:"<<endl;
+	char x;
+	cin>>x;
+	char temp =tree.PerentData(x);
+	cout<<"其双亲结点:"<<temp<<endl;
+	return 0;
+}
+
+//建立线索二叉树并输出
+#include <iostream>
+using namespace std;
+enum flag {Child,Thread};			//枚举类型，枚举变量Child = 0，Thread = 1；
+struct ThrNode
+{
+	char date;
+	ThrNode * lchild, *rchild;
+	int ltag, rtag;
+};
+class InThrBiTree
+{
+public:
+	InThrBiTree();										//构造函数
+	~InThrBiTree() { Release(root); }					//析构函数
+	ThrNode * Next(ThrNode *p);		//查找某结点p的后继
+	void InOrder();										//中序遍历
+private:
+	ThrNode * root;															//指向线索链表的头指针
+	ThrNode * Creat(ThrNode * bt);									//构造函数调用
+	ThrNode * ThrBiTree(ThrNode * bt,ThrNode *pre);		//构造函数调用
+	void Release(ThrNode * bt);												//删除二叉树
+};
+
+InThrBiTree::InThrBiTree()
+{
+	ThrNode *pre;
+	root = Creat(root);
+	pre = NULL;
+	ThrBiTree(root,pre);
+}
+
+ThrNode * InThrBiTree::Creat(ThrNode * bt)
+{
+	char ch;
+	cin >> ch;
+	if (ch == '#')
+		bt = NULL;
+	else
+	{
+		bt = new ThrNode; bt->date = ch;
+		bt->ltag = 0; bt->rtag = 0;
+		bt->lchild = Creat(bt->lchild);
+		bt->rchild = Creat(bt->rchild);
+	}
+	return bt;
+}
+
+ThrNode* InThrBiTree::ThrBiTree(ThrNode * bt, ThrNode *pre)
+{
+	if (bt == NULL) return pre;
+	pre = ThrBiTree(bt->lchild, pre);
+	if (bt->lchild == NULL)
+	{
+		bt->ltag = 1;
+		bt->lchild = pre;
+	}
+	if (bt->rchild == NULL) bt->rtag = 1;
+	if (pre!=NULL && pre->rtag == 1) pre->rchild = bt;
+	pre = bt;
+	pre = ThrBiTree(bt->rchild, pre);
+	return pre;
+}
+
+ThrNode* InThrBiTree::Next(ThrNode * p)
+{
+	ThrNode *q;
+	if (p->rtag == 1) q = p->rchild;
+	else 
+	{
+		q = p->rchild;
+		while (q->ltag == 0)
+			q = q->lchild;
+	}
+	return q;
+}
+void InThrBiTree::InOrder()
+{
+	ThrNode * p;
+	if (root == NULL)
+	{
+		cout << "NULL" << endl;
+		return;
+	}
+	p = root;
+	while (p->ltag == 0)
+		p = p->lchild;
+	cout << p->date << " " << endl;
+	while ( p->rchild != NULL)
+	{
+		p = Next(p);
+		cout << p->date <<" " << endl;
+	}
+}
+
+void InThrBiTree::Release(ThrNode * bt)
+{
+	if (bt != NULL)
+	{
+		if (bt->ltag == 0)
+			Release(bt->lchild);
+		if (bt->rtag == 0)
+			Release(bt->rchild);
+		delete bt;
+	}
+}
+int main()
+{
+	InThrBiTree tree;
+	tree.InOrder();
+	return 0;
+}
+

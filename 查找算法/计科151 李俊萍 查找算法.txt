@@ -1,0 +1,440 @@
+#include<iostream>
+#include<cstring>
+using namespace std;
+
+//顺序查找 
+#define MAXSIZE 1000 
+#define MAX_BLOCK_SIZE 5 
+template<class DataType>
+int seqSearch(DataType data[],int n,DataType const &k){
+	int i=0;
+	data[n] = k;
+	while(data[i]!=k){
+		i++;
+	}
+	return i;
+}
+//二分查找 
+template<class DataType>
+class BinSearch{
+	public:
+		BinSearch(DataType *data,int n){
+			this->data = data;
+			//初始化，在不影响原来数据的基础上进行从小到大排序 
+			this->index = new int[n];
+			for(int i=0;i<n;i++){
+				index[i] = i;
+			}
+			length = n;
+			int low =0;
+			int high = n-1;
+			while(low<high){
+				int clow = low;
+				for(int i=low;i<=high;i++){
+					if(data[index[i]]<data[index[clow]]){
+						clow = i;
+					}
+				}
+				int temp = index[low];
+				index[low] = index[clow];
+				index[clow] = temp;
+				low++;
+				int chigh = low;
+				for(int i=high;i>=low;i--){
+					if(data[index[i]]>data[index[chigh]]){
+						chigh = i;
+					}
+				}
+				temp = index[high];
+				index[high] = index[chigh];
+				index[chigh] = temp;
+				high--;
+			}
+		}
+		int binSearch(DataType &k){
+			int id = -1;
+			int low = 1;
+			int high = length;
+			while(low<=high){
+				int mid = (low+high)/2;
+				if(k<data[index[mid]]) high = mid -1;
+				else if(k>data[index[mid]]) low = mid+1;
+				else return index[mid];
+			}
+			return -1;
+		}
+		~BinSearch(){
+			if(index!=NULL){
+				delete index;
+			}
+		}
+	private:
+		DataType *data;
+		int length;
+		int *index;
+};
+
+//分块查找 
+template<class DataType>
+class BlockSearch{
+	public:
+		BlockSearch(DataType *data,int n){
+			this->data = data;
+			//初始化，在不影响原来数据的基础上进行从小到大排序 
+			this->index = new int[n];
+			for(int i=0;i<n;i++){
+				index[i] = i;
+			}
+			length = n;
+			int low =0;
+			int high = n-1;
+			while(low<high){
+				int clow = low;
+				for(int i=low;i<=high;i++){
+					if(data[index[i]]<data[index[clow]]){
+						clow = i;
+					}
+				}
+				int temp = index[low];
+				index[low] = index[clow];
+				index[clow] = temp;
+				low++;
+				int chigh = low;
+				for(int i=high;i>=low;i--){
+					if(data[index[i]]>data[index[chigh]]){
+						chigh = i;
+					}
+				}
+				temp = index[high];
+				index[high] = index[chigh];
+				index[chigh] = temp;
+				high--;
+			}
+			int m = 1;//获得分块长度
+			//进行分块
+			while(n>MAX_BLOCK_SIZE){
+				n/=2;
+				m*=2;
+			}
+			blockCount = n;
+			blockLength = m;
+		}
+		//查找k，返回第一个遇到的 
+		int blockSearch(DataType &k){
+			int id = -1;
+			int min = -1;
+			for(int i=0;i<blockCount;i++){
+				if(k<data[index[(i+1)*blockLength-1]]||k==data[index[(i+1)*blockLength-1]]){//找到k所在最小块 
+					min = i;
+					break; 
+				}
+			}
+			if(min!=-1){
+				for(int i=min*blockLength;i<(min+1)*blockLength;i++){
+					if(k==data[index[i]]){
+						id = index[i];
+						break;
+					}
+				}
+			}else{
+				for(int i=blockCount*blockLength-1;i<length;i++){
+					if(k==data[index[i]]){
+						id = index[i];
+						break;
+					}
+				}
+			}
+			return id;
+		}
+		~BlockSearch(){
+			if(index!=NULL){
+				delete index;
+			}
+		}
+	private:
+		int blockCount;
+		int blockLength;
+		DataType *data;
+		int length;
+		int *index;
+};
+
+//二叉排序树查找
+template<class DataType> 
+class TreeNode{
+	public:
+		DataType data;
+		TreeNode<DataType> *lChild;
+		TreeNode<DataType> *rChild;
+		TreeNode(){
+			this->data = NULL;
+			this->rChild = NULL;
+			this->lChild = NULL; 
+		}
+};
+template<class DataType> 
+class BiSortTree{
+	public:
+		BiSortTree(){
+			root = NULL;
+		}
+		BiSortTree(DataType data[],int n){
+			TreeNode<DataType> *s;
+			root = NULL;
+			for(int i=0;i<n;i++){
+				s = new TreeNode<DataType>();
+				s->data = data[i];
+				insert(root,s);
+			}
+		}
+		//插入 
+		void insert(TreeNode<DataType> *&root,TreeNode<DataType> *s){
+			if(root==NULL){
+				root = s;
+			}else if(s->data<root->data){
+				insert(root->lChild,s);
+			}
+			else{
+				insert(root->rChild,s);
+			}
+		}
+		//删除遇到的第一个k结点 
+		void delNode(DataType &k){
+			if(root==NULL){
+				return;
+			}
+			TreeNode<DataType>* delp = search(k);
+			if(delp==NULL){
+				return;
+			}
+			TreeNode<DataType>* queue[MAXSIZE];
+			int rear = -1;
+			int front = -1;
+			queue[++rear] = root;
+			TreeNode<DataType>* p;
+			while(front!=rear){
+				p = queue[++front];
+				if(delp==p->lChild){
+					delNodeLeft(delp,p);
+					break;
+				}else if(delp==p->rChild){
+					delNodeRight(delp,p);
+				}
+				if(p->lChild!=NULL){
+					queue[++rear] = p->lChild;
+				}
+				if(p->rChild!=NULL){
+					queue[++rear] = p->rChild;
+				}
+			}
+		}
+		//遍历 
+		void display(){
+			display(root);
+			cout<<endl;
+		}
+		//返回第一个与m相等的 
+		TreeNode<DataType>* search(DataType &k){
+			TreeNode<DataType>* m = NULL;
+			search(root,k,m);
+			return m;
+		}
+	private:
+		TreeNode<DataType> *root;
+		void display(TreeNode<DataType> *r){
+			if(r==NULL){
+				return;
+			}
+			display(r->lChild);
+			cout<<r->data<<" ";
+			display(r->rChild);
+		}
+		void search(TreeNode<DataType> *root,DataType &k,TreeNode<DataType> *&m){
+			if(m!=NULL){
+				return;
+			}
+			if(root==NULL){
+				return;	
+			}
+			else if(root->data == k){
+				m = root;
+			}else if(root->data>k){
+				search(root->lChild,k,m);
+			}else{
+				search(root->rChild,k,m);
+			}
+		}
+		//删除f的左结点p 
+		void delNodeLeft(TreeNode<DataType>* p,TreeNode<DataType>* f){
+			if(p->lChild==NULL&&p->rChild==NULL){
+				f->lChild = NULL;
+				delete p;
+			}else if(p->rChild==NULL){
+				f->lChild = p->lChild;
+				delete p;
+			}else if(p->lChild==NULL){
+				f->lChild = p->rChild;
+				delete p;
+			}else{
+				TreeNode<DataType> *par = p;
+				TreeNode<DataType> *s = p->rChild;
+				while(s->lChild!=NULL){
+					par = s;
+					s = s->lChild;
+				}
+				p->data = s->data;
+				if(par==p){
+					par->rChild = s->rChild;
+				}else{
+					par->lChild = s->rChild;
+				}
+				delete s;
+			}
+		}
+		//删除f的右结点p 
+		void delNodeRight(TreeNode<DataType>* p,TreeNode<DataType>* f){
+			if(p->lChild==NULL&&p->rChild==NULL){
+				f->rChild = NULL;
+				delete p;
+			}else if(p->rChild==NULL){
+				f->rChild = p->lChild;
+				delete p;
+			}else if(p->lChild==NULL){
+				f->rChild = p->rChild;
+				delete p;
+			}else{
+				TreeNode<DataType> *par = p;
+				TreeNode<DataType> *s = p->lChild;
+				while(s->rChild!=NULL){
+					par = s;
+					s = s->rChild;
+				}
+				p->data = s->data;
+				if(par==p){
+					par->lChild = s->lChild;
+				}else{
+					par->rChild = s->lChild;
+				}
+				delete s;
+			}
+		}
+}; 
+
+//顺序查找 
+/**********
+测试数据 
+3
+1 2 3
+2
+
+3
+1 2 3
+3
+
+3
+1 2 3
+4
+
+0
+输出
+1
+2
+3
+//*********/
+void text1(){
+	int a[MAXSIZE];
+	int n = 0;
+	int b = 0;
+	cin>>n;
+	while(n!=0){
+		for(int i=0;i<n;i++)
+			cin>>a[i];
+		cin>>b;
+		cout<<seqSearch(a,n,b)<<endl;
+		cin>>n;
+	}
+}
+//二分查找 
+/**********
+测试数据 
+asdfghjklqwertyuiopzxcvbnm1234567890
+7
+输出
+32
+//*********/
+void text2(){
+	char a[MAXSIZE];
+	char b = 0;
+	cin>>a;
+	BinSearch<char> s(a,strlen(a));
+	cin>>b;
+	cout<<s.binSearch(b)<<endl;
+}
+//分块查找 
+/**********
+测试数据 
+asdfghjklqwertyuiopzxcvbnm1234567890
+7
+输出
+32
+//*********/
+void text3(){
+	char a[MAXSIZE];
+	char b = 0;
+	cin>>a;
+	BlockSearch<char> s(a,strlen(a));
+	cin>>b;
+	cout<<s.blockSearch(b);
+}
+//二叉排序树查找 
+/**********
+测试数据 
+asdfghjklqwertyuiopzxcvbnm1234567890
+7
+输出
+7
+//*********/
+void text4(){
+	char a[MAXSIZE];
+	char b = 0;
+	cin>>a;
+	BiSortTree<char> s(a,strlen(a));
+	cin>>b;
+	cout<<s.search(b)->data<<endl;
+}
+
+//计算数据 
+void text5(){
+	char a[MAXSIZE] = "aASQWEs5RTXVcwm2o7vP]YL[;D'./MF$IG%^&*(ZBCNM']6pdbhO1luqUHJKfe9@#)jx8krt3yigzn40";
+	int n = strlen(a);
+	int m = 0;
+	BlockSearch<char> s1(a,n);
+	BinSearch<char> s2(a,n);
+	BiSortTree<char> s3(a,n);
+	while(m<100){
+		cout<<a[m%n]<<':'; 
+		cout<<s3.search(a[m%n])->data<<" =";
+		cout<<m%n<<' '; 
+		cout<<s1.blockSearch(a[m%n])<<' ';
+		cout<<s2.binSearch(a[m%n])<<' ';
+		cout<<seqSearch(a,n,a[m%n])<<endl;
+		m++;
+	}
+}
+int main(){
+	//text1();	
+	//text2(); 
+	//text3();
+	//text4();
+	//text5();
+	
+	/*二叉排序树删除结点*
+	char a[MAXSIZE] = "asdfghjklqwertyuiopzxcvbnm1234567890";
+	char b = '7';
+	BiSortTree<char> s3(a,strlen(a));
+	s3.display();
+	s3.delNode(b);
+	s3.display();
+	//*******************/ 
+	return 0;
+} 

@@ -1,0 +1,373 @@
+#include<stdio.h>
+#include<iostream>
+using namespace std;
+typedef char DataType;
+typedef struct BiNode
+{
+    DataType data;
+    BiNode *lchild,*rchild;
+}BiNode;
+int find_max(int a[],int n)
+{
+	int max = a[0];
+	for(int i=1;i<n;i++)
+	{
+		if(a[i]>max)
+		{
+			max = a[i];
+		}
+	}
+	return max;
+}
+class BiTree
+{
+private:
+	BiNode *root;
+	int count;
+	int deep;
+	int a[100],i; //a[100]存放每个叶子节点所在层数
+	BiNode *Create(BiNode *bt)
+	{
+		count = 0;
+		deep = 0;
+		a[100] = { 1 };
+		DataType ch;
+		cin >> ch;
+		if (getchar() == '\n')
+			return 0;
+		if (ch == '#')
+			bt = NULL;
+		else
+		{
+			bt = new BiNode;
+			bt->data = ch;
+			bt->lchild = Create(bt->lchild);
+			bt->rchild = Create(bt->rchild);
+		}
+		i = 0;
+		return bt;
+	}
+	void Release(BiNode *bt)
+	{
+		if(bt!=NULL)
+		{
+			Release(bt->lchild);
+			Release(bt->rchild);
+			delete bt;
+		}
+	}
+	void PreOrder(BiNode *bt)
+	{
+		if (bt==NULL)
+		{
+			return;
+		}
+		else
+		{
+			cout << bt->data << " ";
+			PreOrder(bt->lchild);
+			PreOrder(bt->rchild);
+			count++;
+		}
+	}
+	void InOrder(BiNode *bt)
+	{
+		if (bt == NULL)
+			return;
+		else
+		{
+			InOrder(bt->lchild);
+			cout << bt->data << " ";
+			InOrder(bt->rchild);
+		}
+	}
+	void PostOrder(BiNode *bt)
+	{
+		if (bt == NULL)
+			return;
+		else
+		{
+			PostOrder(bt->lchild);
+			PostOrder(bt->rchild);
+			cout << bt->data << " ";
+		}
+	}
+	bool IsComplete(BiNode *bt)
+	{
+		if (bt == NULL)
+			return false;
+		int front, rear,num[50],all_num[50],m,n,j,k,p;  //num[50]相当于按层序编号,all_num[50]相当于满二叉树编号
+		front = rear = -1;
+		n= m = 0;
+		BiNode *Q[50],*q;
+		Q[++rear] = bt;
+		num[0] = 1;
+		all_num[0] = 1;
+		while (front != rear)
+		{
+			q = Q[++front];
+			if (q->lchild != NULL)
+			{ 
+				k = m;
+				Q[++rear] = q->lchild;
+				if(num[m]==0)
+				{
+					for (p = m; num[p] == 0; p--);	
+					num[++m] = num[p] + 1;
+				}
+				else
+				{
+					num[++m] = num[k] + 1;
+				}
+			}
+			else
+			{
+				num[++m] = 0;
+			}
+			if (q->rchild != NULL)
+			{
+				k = m;
+				Q[++rear] = q->rchild;
+				if (num[m] == 0)
+				{
+					for (p = m; num[p] == 0; p--);
+					num[++m] = num[p] + 1;
+				}
+				else
+				{
+					num[++m] = num[k] + 1;
+				}
+			}
+			else
+			{
+				num[++m] = 0;
+			}
+		}
+		rear = 0, front = -1;
+		Q[rear] = bt;
+		while (front != rear)
+		{
+			q = Q[++front];
+			if (q->lchild != NULL)
+			{
+				Q[++rear] = q->lchild;
+				j = n;
+				all_num[++n] = all_num[j] + 1;
+			}
+			if (q->rchild != NULL)
+			{
+				Q[++rear] = q->rchild;
+				j = n;
+				all_num[++n] = all_num[j] + 1;
+			}
+		}
+        for(int i=0;i<n;i++)
+		{
+			if (num[i] != all_num[i])
+				return false;
+		}
+		return true;
+	}
+	int GetLeafCount(BiNode *bt)
+	{
+		int front, rear,leaf_count;
+		front = rear = -1;
+		leaf_count = 0;
+		if (bt == NULL)
+			return 0;
+		BiNode *Q[50], *q;
+		Q[++rear] = bt;
+		while(front!=rear)
+		{
+			q = Q[++front];
+			if(q->lchild==NULL&&q->rchild==NULL)
+			{
+				leaf_count++;
+			}
+			else if (q->lchild != NULL)
+				Q[++rear] = q->lchild;
+			else if (q->rchild != NULL)
+				Q[++rear] = q->rchild;
+		}
+		return leaf_count;
+	}
+	void PerLeafNodeStage(BiNode *bt)
+	{
+		static DataType data[50];  //栈
+		static int top = -1;      
+		if (bt == NULL)
+		{
+			return;
+		}
+		else
+		{
+			data[++top] = bt->data;
+			if (bt->lchild == NULL&&bt->rchild == NULL)
+			{
+				a[i] = top+1;
+				i++;
+				top--;
+				return;
+			}
+			PerLeafNodeStage(bt->lchild);
+			PerLeafNodeStage(bt->rchild);
+			top--;
+		}
+	}
+	DataType GetParent(BiNode* bt,BiNode* t)
+	{
+		int front, rear;
+		front = rear = -1;
+		if (bt == NULL||t->data==bt->data)
+			return 0;
+		BiNode *Q[50], *q;
+		Q[++rear] = bt;
+		while (front != rear)
+		{
+			q = Q[++front];
+			if (q->lchild != NULL)
+			{
+				Q[++rear] = q->lchild;
+				if (q->lchild->data == t->data || q->rchild->data == t->data)
+					return q->data;
+			}
+			if (q->rchild != NULL)
+			{
+				Q[++rear] = q->rchild;
+				if (q->rchild->data == t->data || q->rchild->data == t->data)
+					return q->data;
+			}
+		}
+		return 0;
+	}
+public:
+	BiTree()
+	{
+		root = Create(root);
+	}
+	~BiTree()
+	{
+		Release(root);
+	}
+	void PreOrder()
+	{
+		if (root == NULL)
+		{
+			char *s = "NULL";
+			throw s;
+		}
+		PreOrder(root);
+	}
+	void InOrder()
+	{
+		InOrder(root);
+	}
+	void PostOrder()
+	{
+		PostOrder(root);
+	}
+	void LeverOrder()
+	{
+		int front, rear;
+		front = rear = -1;
+		if (root == NULL)
+			return;
+		BiNode *Q[50],*q,*temp;
+		Q[++rear] = root;
+		temp = root;
+		while (front != rear)
+		{
+			
+			q = Q[++front];
+			cout << q->data << " ";
+			if (q->lchild != NULL)
+				Q[++rear] = q->lchild;
+			if (q->rchild != NULL)
+				Q[++rear] = q->rchild;
+		}
+	}
+	int GetCount()
+	{
+		return count;
+	}
+	int GetDeep()
+	{
+		PerLeafNodeStage(root);
+		deep = find_max(a, i);
+		return deep;
+	}
+	bool IsComplete()
+	{
+		return IsComplete(root);
+	}
+	DataType GetParent(BiNode* q)
+	{
+		return GetParent(root, q);
+	}
+};
+enum flag{Child,Thread};
+typedef struct ThrNode
+{
+	DataType data;
+	ThrNode *lchild, *rchild;
+	flag ltag, rtag;
+}ThrNode;
+class InThrBiTree
+{
+private:
+	ThrNode *root;
+	ThrNode *Creat(ThrNode *bt)
+	{
+		DataType ch;
+		cin >> ch;
+		if (getchar() == '\n')
+			return 0;
+		if (ch == '#')
+			bt = NULL;
+		else
+		{
+			bt = new ThrNode;
+			bt->data = ch;
+			bt->ltag = Child;
+			bt->rtag = Child;
+			bt->lchild = Creat(bt->lchild);
+			bt->rchild = Creat(bt->rchild);
+		}
+		return bt;
+	}
+	void ThrBiTree(ThrNode *bt,ThrNode *pre)
+	{
+		if (bt == NULL)
+			return;
+		ThrBiTree(bt->lchild, pre);
+		if(bt->lchild==NULL)
+		{
+			bt->ltag = Thread;
+			bt->lchild = pre;
+		}
+		if(bt->rchild==NULL)
+		{
+			bt->rtag = Thread;
+		}
+		ThrBiTree(bt->rchild, pre);
+	}
+	void InOrder(ThrNode *bt)
+	{
+		if (bt == NULL)
+			return;
+		InOrder(bt->lchild);
+		cout << bt->ltag << " " << bt->data << " " << bt->rtag << endl;
+		InOrder(bt->rchild);
+	}
+public:
+	InThrBiTree()
+	{
+		root = Creat(root);
+		ThrNode* pre = NULL;
+		ThrBiTree(root, pre);
+	}
+	void InOrder()
+	{
+		InOrder(root);
+	}
+};

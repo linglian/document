@@ -1,0 +1,149 @@
+#include<iostream>
+#include<string>
+#include<string.h>
+using namespace std;
+struct Node
+{
+	char data;
+	int weigth;
+	char code[10];
+};
+struct element
+{
+	Node node;
+	int lchild,rchild,parent,judge;
+};
+element el[100];
+int n=0,i,j,k;
+void deal(string s,int len)   //求字幕的权重
+{
+	el[0].node.data=s[0];
+	el[0].node.weigth=1;
+	n++;
+	for(i=1;i<len;i++)
+	{
+		for(j=0;j<n;j++)
+		{
+			if(s[i]==el[j].node.data)
+			{
+				el[j].node.weigth++;
+				break;
+			}
+		}
+		if(j==n)
+		{
+			el[n].node.data=s[i];
+			el[n].node.weigth=1;
+			n++;
+		}
+	}
+}
+
+int select(int m)    //求数组中权的最小值的下标
+{
+	int min=100,x=100;
+	for(i=0;i<m;i++)
+	{
+		if(min>el[i].node.weigth&&el[i].judge==-1)
+		{
+			min=el[i].node.weigth;
+			x=i;
+		}
+	}
+	el[x].judge=0;
+	return x;
+}
+void HuffmanTree()     //建立哈夫曼树
+{
+	for(i=0;i<2*n-1;i++)
+	{
+		el[i].parent=-1;
+		el[i].lchild=-1;
+		el[i].rchild=-1;
+		el[i].judge=-1;
+	}
+	for(j=n;j<2*n-1;j++)
+	{
+		int i1=select(j);
+		int i2=select(j);
+		el[i1].parent=j;
+		el[i2].parent=j;
+		el[j].node.weigth=el[i1].node.weigth+el[i2].node.weigth;
+		el[j].lchild=i1;
+		el[j].rchild=i2;
+	}
+}
+	char f[10];
+void encodeen(int r,int y)  //求叶子节点的编码
+{
+	if(el[r].rchild==-1&&el[r].lchild==-1)
+	{
+		strcpy(el[r].node.code,f);
+		y--;
+		return ;
+	}
+	else
+	{
+			f[++y]='0';
+			encodeen(el[r].lchild,y);
+			y--;
+			f[++y]='1';
+			encodeen(el[r].rchild,y);
+	}
+}
+void output1(string s,int len)//输出字母及对应的编号
+{
+	for(i=0;i<n;i++)
+       cout<<el[i].node.data<<" "<<el[i].node.code<<endl;
+}
+void output(string s,int len)   //输出字母的编号
+{
+	for(i=0;i<len;i++)
+	{
+		for(k=0;k<len;k++)
+		{
+			if(s[i]==el[k].node.data)
+				cout<<el[k].node.code;
+		}
+	}
+	cout<<endl;
+}
+
+void decode()//译码
+{
+int b,v=0;
+ char s[100];
+   b=j-1;              
+   cin>>s;
+ while(s[v]!='\0')
+ {
+  if(s[v]=='0')
+   b=el[b].lchild;   
+  else
+   b=el[b].rchild;   
+  if(el[b].lchild==-1&&el[b].rchild==-1)     
+  {
+	  cout<<el[b].node.data;
+      b=j-1;      
+  }
+  v++;
+ }
+ cout<<endl;
+ if(el[b].lchild!=-1&&s[v]!='\0')
+  cout<<"\nERROR\n";  
+}
+int main()
+{
+
+	int y=-1;
+	string s;
+	cin>>s;
+	int len=s.length();
+    deal(s,len);
+	HuffmanTree();
+    encodeen(j-1,y);
+	output1(s,len);
+	 output(s,len);
+	 decode();
+	return 0;
+}

@@ -1,0 +1,503 @@
+#include<iostream>
+using namespace std;
+const int MaxSize=100;    //数组最大空间 
+class Prim
+{
+	public:
+		int adjlist;
+		int lowcost;
+};
+class MGraph             //临接矩阵类 
+{
+	public:
+		MGraph(char a[],int n,int e,int k1);        // 临接矩阵构造函数 
+		~MGraph(){
+		}       
+		void DFSTraverse(int v);    //深度遍历调用函数 
+		void BFSTraverse(int v);    //广度遍历调用函数 
+		void DFSTraverse();      //深度遍历
+		void BFSTraverse();     //广度遍历 
+        void prim();   //求最小生成树 
+        void PrintfShortest();   //输出最小生成树 
+        void Dijkstra(int v);  //求最短路径 
+        void TopSort();       // 拓扑排序 
+        void Countin();   //统计每个顶点的入度 
+        void Earliest();  //事件发生时间初始化 
+        void KeyPath();  //关键路径 
+		private:
+			char vertex[MaxSize];    //顶点数组 
+			Prim ShortEdge[MaxSize];  //候选最短边集 
+			char u[MaxSize];      //存放最小生成树 
+			int arc[MaxSize][MaxSize];    //临接矩阵二维数组 
+			int vertexNum,arcNum;   //定点个数，边个数 
+			int visited[MaxSize];    //标记数组 
+			int dist[MaxSize];    //辅助数组（当前所找到的从源点到终点的最短路径） 
+		    char path[MaxSize][MaxSize];    //辅助数组(存放源点到各终点的最短路径) 
+		    int s[MaxSize];     //存放源点和已生成的终点 
+		    int x[MaxSize];     //记录并存放数组path每行的顶点个数 
+		    int vertexin[MaxSize]; //记录每个顶点的入度
+			static int count2;    //存放在TuoPu_arr数组中的各顶点的下标 
+			int ve[MaxSize],vl[MaxSize],ee[MaxSize],el[MaxSize];    //事件的最早发生时间，事件的最迟发生时间，活动的最早开始时间，活动的最迟开始时间 
+			int TuoPu_arr[MaxSize];    //存放拓扑排序后的各顶点 
+			int adjvex[MaxSize];   //存放路径的序号 
+			
+};
+int MGraph::count2=0;
+void MGraph::Earliest()    //事件发生时间初始化 
+{
+	int i;
+	for(i=0;i<vertexNum;i++)
+	{
+		ve[i]=0;
+	}
+	for(i=0;i<arcNum;i++)
+	{
+		ee[i]=0;
+	}
+	for(i=0;i<arcNum;i++)
+	{
+		el[i]=0;
+	}
+	
+}
+void MGraph::Countin()    //统计每个顶点的入度 
+{
+	int i,num,j;
+	for(i=0;i<vertexNum;i++)
+	{
+		vertexin[i]=0;
+	}
+	for(j=0;j<vertexNum;j++)
+	{
+		num=0;
+		for(i=0;i<vertexNum;i++)
+		{
+			if(arc[i][j]!=0&&arc[i][j]!=999)
+			{
+				num++;
+			}
+		}
+		vertexin[j]=num;
+		
+	}
+}
+void MGraph::TopSort()    // 拓扑排序
+{
+	int front,rear;
+	front=rear=-1;
+	int Q[MaxSize],i,j,k;
+	for(i=0;i<vertexNum;i++)
+	{
+		if(vertexin[i]==0)
+		{
+			Q[++rear]=i;
+		}
+	}
+	for(i=0;i<vertexNum;i++)
+	{
+		visited[i]=0;
+	}
+	while(front!=rear)
+	{
+		j=Q[++front];
+		TuoPu_arr[count2]=j; 
+		cout<<vertex[j];     
+		count2++;
+		for(k=0;k<vertexNum;k++)
+		{
+			if(arc[j][k]!=0&&arc[j][k]!=999)
+			{
+				vertexin[k]--;
+				visited[k]=1;
+			}
+		}
+		for(k=0;k<vertexNum;k++)
+		{
+			if(visited[k]==1)
+			{
+				visited[k]=0;
+			if(vertexin[k]==0)
+			{
+				Q[++rear]=k;
+			}
+			if(ve[j]+arc[j][k]>ve[k])     
+			{
+				ve[k]=ve[j]+arc[j][k];
+			}
+		}
+		}
+	
+	}
+	if(count2<vertexNum)
+	{
+		cout<<"有回路!"<<endl;
+	}
+	
+}
+void MGraph::KeyPath()    //关键路径
+{
+	int i,j,k,x,y,z;
+	i=0;
+    for(j=0;j<vertexNum;j++)
+{
+		for(k=0;k<vertexNum;k++)
+	{
+		if(arc[j][k]!=0&&arc[j][k]!=999)
+		{
+			ee[i]=ve[j];
+			i++;
+		}
+	}
+			
+}
+ 
+	for(i=0;i<vertexNum;i++)
+	{
+		vl[i]=ve[vertexNum-1];
+	}
+	for(i=0;i<vertexNum;i++)
+	{
+		k=TuoPu_arr[vertexNum-1-i];   //拓扑的逆序
+		for(j=0;j<vertexNum;j++)
+		{
+			if(arc[k][j]!=0&&arc[k][j]!=999)
+			{
+				if(vl[j]-arc[k][j]<vl[k])
+				{
+					vl[k]=vl[j]-arc[k][j];
+				}
+			}
+		 } 
+	}
+	k=0;
+	for(i=0;i<vertexNum;i++)
+	{
+		for(j=0;j<vertexNum;j++)
+		{
+			if(arc[i][j]!=0&&arc[i][j]!=999)
+			{
+				el[k]=vl[j]-arc[i][j];
+				k++;
+			
+		}
+		}
+		
+	}
+	for(i=0;i<vertexNum;i++)
+	{
+		visited[i]=0;
+	}
+	int array[MaxSize];
+	k=0;
+	for(i=0;i<arcNum;i++)
+	{
+		if(ee[i]==el[i])
+		{
+			array[k]=i;
+			k++;
+		}
+	}
+	 cout<<vertex[0];
+	 z=0;i=0;
+	 while(i<vertexNum-1)
+	 {
+	 	k=0;
+	 	for(j=0;j<vertexNum;j++)
+	 	{
+	 		if(arc[i][j]==adjvex[array[z]])
+	 		{
+	 			k=1;
+	 			i=j;
+	 			z++;
+	 			cout<<vertex[j];
+	 			break;
+			 }
+		 }
+		 if(k==0)
+		 {
+		 	z++;
+		 }
+	 }
+
+	
+}
+void MGraph::Dijkstra(int v)          //求最短路径 
+{
+	int i,num,k=0,j=0,z,count;      //k为dist数组中最小值的编号,num为s数组中的顶点个数 ,count为数组path每行的顶点总个数(path改变后的) 
+	for(i=0;i<vertexNum;i++)       //对数组x进行初始化,均含两个顶点 
+	{
+		x[i]=2;
+	}
+	for(i=0;i<vertexNum;i++)
+	{
+		dist[i]=arc[v][i];
+		if(dist[i]!=999)           //对数组dist和path初始化 
+		{
+			path[i][j]=vertex[v];
+			path[i][j+1]=vertex[i];
+			
+		}
+		else path[i][j]=' ';
+	}
+	for(i=0;i<vertexNum;i++)
+	{
+		for(j=2;j<=vertexNum;j++)
+		{
+			path[i][j]=' ';
+		}
+	}
+	s[0]=v;
+	dist[v]=0;
+	num=1;
+	while(num<vertexNum)        
+	{
+		for(i=0;i<vertexNum;i++)
+		{
+			for(j=k;j<vertexNum;j++)
+			{
+				if(dist[j]==0)
+				{
+					continue;
+				}
+				k=j;
+				break;
+			}
+			if((dist[i]<dist[k])&&(dist[i]!=0))
+			{
+				k=i;
+			}
+		}
+		cout<<endl;
+		cout<<dist[k]<<" ";
+		for(i=0;i<x[k];i++)
+		{
+			cout<<path[k][i];
+		}
+		s[num++]=k;
+		for(i=0;i<vertexNum;i++)
+		{
+			if(dist[i]>dist[k]+arc[k][i])
+			{
+				dist[i]=dist[k]+arc[k][i];
+				for(j=0;j<x[k];j++)
+				{
+					path[i][j]=path[k][j];
+				}
+				path[i][j]=vertex[i];
+		        z=0;count=0;
+		       while(path[i][z]!=' ')
+		       {
+		       	count++;
+		       	z++;
+			   }
+			   x[i]=count;    //修改x数组 
+			}
+		}
+		dist[k]=0;
+		
+	}
+	
+}
+void MGraph::prim()     //最小生成树 
+{
+	
+	int j,i,min_shortest,min_test; 
+	for(i=1;i<vertexNum;i++)
+	{
+		ShortEdge[i].lowcost=arc[0][i];    //初始化 
+		ShortEdge[i].adjlist=0;
+	}
+	ShortEdge[0].lowcost=0;
+	u[0]=vertex[0];
+	for(i=1;i<vertexNum;i++)
+	{
+		min_test=11111;
+		for(j=0;j<vertexNum;j++)
+		{
+			if(ShortEdge[j].lowcost!=0&&ShortEdge[j].lowcost<min_test)
+			{
+				min_test=ShortEdge[j].lowcost;
+				min_shortest=j;
+			}
+		}
+		ShortEdge[min_shortest].lowcost=0;     //将顶点min_shortest加入集合中 
+		u[i]=vertex[min_shortest];
+		for(j=1;j<vertexNum;j++)
+		{
+			if(arc[min_shortest][j]<ShortEdge[j].lowcost)
+			{
+				ShortEdge[j].lowcost=arc[min_shortest][j];
+				ShortEdge[j].adjlist=min_shortest;
+			}
+		}
+	}
+	
+}
+void MGraph::PrintfShortest()    //输出最小生成树 
+{
+	int i;
+	cout<<"最小生成树为:"<<endl; 
+	for(i=0;i<vertexNum;i++)
+	{
+		cout<<u[i]<<" ";
+	}
+}
+MGraph::MGraph(char a[],int n,int e,int k1)   //临接矩阵初始化 
+{
+	vertexNum=n;
+	arcNum=e;
+	int i,j,k,w;
+	for(i=0;i<vertexNum;i++)
+	{
+		vertex[i]=a[i];
+	}
+	for(i=0;i<vertexNum;i++)
+	{
+		visited[i]=0;
+		for(j=0;j<vertexNum;j++)
+		{
+			if(i==j)
+			{
+					arc[i][j]=0;
+			}
+			else 
+			{
+				arc[i][j]=999;
+			}
+		
+			
+		}
+	}
+	for(k=0;k<arcNum;k++)
+	{
+		cin>>i>>j>>w;
+		if(k1==0)
+		{
+		arc[i][j]=w;
+		arc[j][i]=w;
+		adjvex[k]=w;
+	}
+	if(k1==1)
+	{
+		arc[i][j]=w;
+		adjvex[k]=w;
+	}
+		
+	}
+	
+}
+
+void  MGraph::DFSTraverse(int v)
+{
+	cout<<vertex[v]<<" ";
+	visited[v]=1;
+	for(int s=0;s<vertexNum;s++)
+	{
+		if(arc[v][s]!=0&&arc[v][s]!=999&&visited[s]==0)
+		{
+			DFSTraverse(s);
+		}
+	}
+	
+}
+void MGraph::DFSTraverse()
+{
+	for(int j=0;j<vertexNum;j++)
+	{
+		visited[j]=0;
+	}
+	for(int i=0;i<vertexNum;i++)
+	{
+		if(visited[i]==0)
+		{
+			DFSTraverse(i);
+		}
+	}
+}
+void MGraph::BFSTraverse(int v)
+{
+
+	int front,rear;
+	front=rear=-1;
+	int Q[MaxSize];
+	cout<<vertex[v]<<" ";
+	visited[v]=1;
+	Q[++rear]=v;
+	while(front!=rear)
+	{
+		v=Q[++front];
+		for(int j=0;j<vertexNum;j++)
+		{
+			if(arc[v][j]!=0&&arc[v][j]!=999&&visited[j]==0)
+			{
+				cout<<vertex[j]<<" ";
+				visited[j]=1;
+				Q[++rear]=j;
+			}
+		}
+	}
+	
+}
+void MGraph::BFSTraverse()
+{
+	int i;
+	for(i=0;i<vertexNum;i++)
+	{
+		visited[i]=0;
+	}
+	for(i=0;i<vertexNum;i++)
+	{
+		if(visited[i]==0)
+		{
+			BFSTraverse(i);
+		}
+	}
+}
+int main()
+{
+	int m,n;
+	char a[100];
+	int i;
+	cout<<"建立无向图:"<<endl;
+	cin>>m>>n;
+	for(i=0;i<m;i++)
+	{
+		cin>>a[i];
+	}
+	MGraph m1(a,m,n,0);   //0为建立无向图 
+	cout<<"深度遍历为:"<<endl;
+	m1.DFSTraverse();
+	cout<<endl;
+	cout<<"广度遍历为:"<<endl;
+	m1.BFSTraverse();
+	cout<<endl;
+	m1.prim();
+	m1.PrintfShortest();
+	cout<<endl;
+	cout<<"建立有向图:"<<endl;
+	cin>>m>>n;
+	for(i=0;i<m;i++)
+	{
+		cin>>a[i];
+	}
+	MGraph m2(a,m,n,1);  //1为建立有向图
+	cout<<"最短路径为:"<<endl;
+	cout<<endl; 
+	m2.Dijkstra(0);
+		cout<<endl;
+	m2.Countin();
+	m2.Earliest();
+	cout<<"拓扑排序为:"<<endl;
+	m2.TopSort();
+	cout<<endl;
+    cout<<"一条关键路径为:"<<endl;
+    m2.KeyPath();
+    cout<<endl;
+	return 0;
+}
+
+
+
+
+
+

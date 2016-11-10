@@ -1,0 +1,265 @@
+#include <iostream>
+#include <stdlib.h>
+using namespace std;
+class element 
+{
+private:
+	int weight;
+	char data;
+	int lchild, rchild, parent,n;
+	int a[20];
+public:
+	int Getn()
+	{
+		return n;
+	}
+	int Geta(int b)
+	{
+		return a[b];
+	}
+	void Seta(int b, int c)
+	{
+		a[b] = c;
+	}
+	void addn()
+	{
+		n++;
+	}
+	int Getlchild()
+	{
+		return lchild;
+	}
+	int Getrchild()
+	{
+		return rchild;
+	}
+	void Setlchild(int a)
+	{
+		lchild = a;
+	}
+	void Setrchild(int a)
+	{
+		rchild = a;
+	}
+	void SetData(char a)
+	{
+		data = a;
+	}
+	element ()
+	{
+		a[20] = { 0 };
+		n = 0;
+		weight = 0;
+		lchild = -1;
+		rchild = -1;
+		parent = -1;
+		data = ' ';
+	}
+	void SetParent(int a)
+	{
+		parent = a;
+	}
+	char GetData()
+	{
+		return data;
+	}
+	void SetWeight(int a)
+	{
+		weight = a;
+	}
+	int GetWeight()
+	{
+		return weight;
+	}
+	int GetParent()
+	{
+		return parent;
+	}
+	void addweight()
+	{
+		weight++;
+	}
+};
+int main()
+{
+	int i=0,j=0,s=0,k=0;   //i,j为循环变量，s为叶子结点个数,k为判断变量
+		int n = 0,m=0;     //n为总共的字符数，m为不重复的字符数
+		char a[20];			//a为输入编码的字符串
+		int b[20] = {0};		//b为查找最小下标时使用的下标数组
+		cout << "输入要编码的字符串：" << endl;
+		cin >> a;
+		while (a[i] != '\0') //统计字符数
+		{
+			n++;
+			i++;
+		}
+		m = n;
+		for (i = 0; i < n; i++) //统计不重复的字符数
+		{
+			for (j = 0; j <i; j++)
+			{
+				if (a[i] == a[j])
+					m--;
+			}
+		}
+		cout << "叶子节点数共有:" << m << endl;
+		element * Node[20];
+		for (i = 0; i < n; i++)  //生成结点
+		{
+			k = 0;
+			for (j = 0; j < s; j++)
+			{
+				if (a[i] == Node[j]->GetData())
+				{
+					Node[j]->addweight();
+					k = 1;
+				}
+			}
+			if (k == 0)
+			{
+				Node[s] = new element();
+				Node[s]->SetData(a[i]);
+				Node[s]->addweight();
+				s++;
+			}
+		}
+		cout << "权值统计：" << endl;
+		for (i = 0; i < s; i++)
+		{
+			cout << "字符：" << Node[i]->GetData() << "   权值：" << Node[i]->GetWeight() << endl;
+		}
+		for ( i=0; i < s; i++)  //将最初的叶子节点下标加入数组
+		{
+			b[i] = i;
+		}
+		int i1=b[0], i2=b[0];      //i1,i2为最小和第二小的权值结点下标
+		for (j = s; j < 2*s - 1; j++)		//构建哈夫曼树
+		{
+			i1 = b[0];
+			Node[j] = new element();
+			for (i = 0; i < 2 * s - j; i++)  //查找最小下标
+			{
+				if (Node[i1]->GetWeight()>Node[b[i]]->GetWeight())
+				{
+					i1 = b[i];
+				}
+			}
+			for (i = 0; i < 2 * s - j; i++)  //删除最小下标
+			{
+				if (b[i] == i1)
+				{
+					for (k = i; k < 2 * s - j; k++)
+						b[k] = b[k + 1];
+				}
+			}
+			i2 = b[0];
+			
+			for (i = 0; i <2 * s - j-1; i++) //寻找第二小下标
+			{
+				if (Node[i2]->GetWeight()>Node[b[i]]->GetWeight())
+				{
+					i2 =b[i];
+				}
+			}
+			for (i = 0; i < 2 * s - j-1; i++) //删除第二小下标
+			{
+				if (b[i] == i2)
+				{
+					for (k = i; k < 2 * s - j-1; k++)
+						b[k] = b[k + 1];
+				}
+			}
+			b[2 * s - j - 2] = j;		//把新生成的树的下标加入数组
+			Node[i1]->SetParent(j);  //生成树过程
+			Node[i2]->SetParent(j);
+			Node[j]->SetWeight(Node[i1]->GetWeight() + Node[i2]->GetWeight());
+			Node[j]->Setlchild(i1);
+			Node[j]->Setrchild(i2);
+		}
+		cout << "哈夫曼树构建完毕：" << endl;
+		for (i = 0; i < 2 * s - 1; i++)
+		{
+			cout << "数据:" << Node[i]->GetData() << " 左：" << Node[i]->Getlchild() << "右：" << Node[i]->Getrchild() << "父亲：" << Node[i]->GetParent() << endl;
+		}
+		int u = 0;
+		element *t,*q;
+		for (i = 0; i < s; i++)	//将各字符编码
+		{
+			t = Node[i];
+			 u = i;
+			 q = t;
+			while (t->GetParent() != -1)
+			{
+				if (u == Node[t->GetParent()]->Getlchild())
+				{
+					q->Seta(q->Getn(), 0);
+					q->addn();
+				}
+				if (u == Node[t->GetParent()]->Getrchild())
+				{
+					q->Seta(q->Getn(), 1);
+					q->addn();
+				}
+				u = t->GetParent();
+				t = Node[t->GetParent()];
+			}
+		}
+		cout << "编译后：" << endl;
+		for (i = 0; i < s; i++)
+		{
+			cout << "字符：" << Node[i]->GetData();
+			cout << "位数：" << Node[i]->Getn();
+			cout << "编码：";
+			for (j = Node[i]->Getn() - 1; j >= 0; j--)
+			{
+				cout << Node[i]->Geta(j);
+			}
+			cout << endl;
+		}
+		for (i = 0; i < n; i++)  //编码
+		{
+			for (j = 0; j < s; j++)
+			{
+				if (a[i] == Node[j]->GetData())
+				{
+					for (k = Node[j]->Getn()-1; k >= 0;k--)
+					{
+						cout << Node[j]->Geta(k);
+					}
+				}
+			}
+		}	
+		cout << "输入要译码的字符串：" << endl;
+		char c[50];
+		int num=0;
+		cin >> c;
+		t = Node[2*s-2];
+		i = 0;
+		while (c[i] != '\0') //统计字符数
+		{
+			num++;
+			i++;
+		}
+		cout << "译码后：" << endl;
+		i= 0;
+		while (i<num)  //译码
+		{
+			t = Node[2 * s - 2];
+			while (t->Getrchild() != -1)
+			{
+				if (c[i] == '0')
+				{
+					t = Node[t->Getlchild()];
+					i++;
+					continue;
+				}
+				if (c[i] == '1')
+				{
+					t = Node[t->Getrchild()];
+					i++;
+				}
+			}
+			cout << t->GetData();
+		}
+	return 0;
+}

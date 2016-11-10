@@ -1,0 +1,163 @@
+#include<iostream>
+using namespace std;
+
+template<class DataType>
+class Node{
+public:
+	DataType n;
+	Node *next;
+	Node(DataType n)
+	{
+		this->n = n;
+		next = NULL;
+	}
+	void display(){
+		cout<<n<<endl;
+	}
+};
+
+template<class DataType>
+class SeqList{
+public:
+	Node<DataType> *head;
+	int lenth;
+	SeqList(){
+		lenth = 0;
+		head = new Node<DataType>(0);
+	}
+	int length(){
+		Node<DataType> *p = head->next;
+		int count = 0;
+		while(p!=NULL){
+			count++;
+			p = p->next;
+		}
+		return count;
+	}
+	void printList(){
+		Node<DataType> *p = head->next;
+		while(p!=NULL){
+			p->display();
+			p = p->next;
+		}
+	}
+	Node<DataType>* get(int i){
+		Node<DataType> *p = head->next;
+		int count = 1;
+		while(p!=NULL&&count<i){
+			p = p->next;
+			count++;
+		}
+		char *a = "位置";
+		if(p==NULL) throw a;
+		else return p;
+	}
+	int locate(Node<DataType> *o){
+		Node<DataType> *p = head->next;
+		int count = 1;
+		while(p!=NULL){
+			if(p->n==o->n) return count;
+			p = p->next;
+			count++;
+		}
+		return 0;
+	}
+	void insert(int i,Node<DataType>* node){
+		char *a = "位置不正确";
+		if(i<1||i>lenth+1) throw a;
+		Node<DataType> *p = head;
+		int count =0;
+		while(p!=NULL&&count<i-1){
+			p = p->next;
+			count++;
+		}
+		if(p==NULL) throw a;
+		else{
+			node->next = p->next;
+			p->next = node;
+			lenth++;
+		} 
+	}
+	Node<DataType>* sc(int i){
+		char *a = "位置不正确";
+		char *b = "下溢";
+		if(lenth==0) throw b;
+		if(i<1||i>lenth+1) throw a;
+		Node<DataType> *p = head;
+		int count = 0;
+		while(p!=NULL&&count<i-1){
+			p = p->next;
+			count++;
+		}
+		if(p==NULL||p->next==NULL){
+			throw a;
+		}else{
+			Node<DataType> *q = p->next;
+			p->next = q->next;
+			lenth--;
+			return q;
+		}
+	}
+	~SeqList(){
+		while(head!=NULL){
+			Node<DataType> *q = head;
+			head = head->next;
+			delete q;
+		}
+	}
+};
+int main()
+{
+  SeqList<int> sq;
+  char select;
+  int i,j,n,m;
+  Node<int> *p;
+  int x;
+  cin >> select;
+  while(select != 'E')
+  {
+    try{ 
+    switch(select)
+     {
+	case 'I':
+           cin >> n;
+           for(i=0;i<n;i++)
+           {
+              cin >> j >> x;
+              sq.insert(j,new Node<int>(x));
+           }
+           break;
+       case 'S':
+       	cin>>n;
+       	m = sq.locate(new Node<int>(n));
+       	if(m == 0) cout<<"None"<<endl;
+       	else cout<<m<<endl;;
+	   break;
+       case 'G':
+       	cin>>n;
+       	cout<<sq.get(n)->n<<endl;
+	   break;
+       case 'D':
+       	cin>>n;
+       	p = sq.sc(n);
+       	cout<<p->n<<endl;
+		break;
+       case 'V':
+       	sq.printList();
+	   break;
+       case 'L':
+       	cout<<sq.length()<<endl;
+	   break;
+     }
+     }
+     catch(char s[])
+     {
+		cout << s << endl;
+     } 
+     cin >> select;
+  }
+  return 0;
+}
+
+
+

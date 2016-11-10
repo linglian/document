@@ -1,0 +1,272 @@
+//1-4
+/*#include <iostream>
+using namespace std;
+struct BiNode
+{
+	char data;
+	BiNode *lchild, *rchild;
+};
+class BigTree
+{
+public:
+	BigTree() { root = creat(root); }
+	~BigTree() { Release(root); }
+	//void Preorder() { Preorder(root); }
+	BiNode *getroot() { return root; }
+	void leafcount(BiNode *bt,int &n);
+	void getdeep() { cout << deep+1 <<endl; }
+	void Leverorder();
+	void wanquan();
+	void parents();
+private:
+	int count;
+	int deep;
+	BiNode *root;
+	BiNode *creat(BiNode *bt);
+	void Release(BiNode *bt);
+	//void Preorder(BiNode *bt);
+};
+int main()
+{
+	int n = 0;
+	BigTree st;
+	BiNode *bt;
+	bt = st.getroot();
+	//st.Preorder();
+	st.Leverorder();
+	st.leafcount(bt, n);
+	cout << n<< endl;//输出叶子节点数
+	st.getdeep();//输出层数
+	st.wanquan();//判断是否是完全二叉树
+	st.parents();//找双亲
+	st.~BigTree();
+	return 0;
+}
+/*void BigTree::Preorder(BiNode *bt)
+{
+	if (bt == NULL)return;
+	else
+	{
+		cout << bt->data;
+		Preorder(bt->lchild);
+		Preorder(bt->rchild);
+		count++;
+	}
+}*/
+/*BiNode *BigTree::creat(BiNode *bt)
+{
+	count = 0;
+	deep = 0;
+	char ch;
+	cin >> ch;
+	if (ch == '#')bt = NULL;
+	else
+	{
+		bt = new BiNode;
+		bt->data = ch;
+		bt->lchild = creat(bt->lchild);
+		bt->rchild = creat(bt->rchild);
+	}
+	return bt;
+}
+void BigTree::Release(BiNode *bt)
+{
+	if (bt != NULL)
+	{
+		Release(bt->lchild);
+		Release(bt->rchild);
+		delete bt;
+	}
+}
+void BigTree::leafcount(BiNode*bt,int &n)
+{
+	if (bt)
+	{
+		if (bt->lchild == NULL&&bt->rchild == NULL)
+			n++;
+		leafcount(bt->lchild,n);
+		leafcount(bt->rchild,n);
+	}
+}
+void BigTree::Leverorder()
+{
+	BiNode *Q[100];
+	BiNode *q;
+	int front;
+	int rear;
+	front = rear = -1;
+	if (root == NULL)return;
+	Q[++rear] = root;
+	while (front!=rear)
+	{
+		q = Q[++front];
+		cout << q->data;
+		if (q->lchild != NULL)Q[++rear] = q->lchild;
+		if (q->rchild != NULL)
+		{
+			Q[++rear] = q->rchild;
+			deep++;
+		}
+	}
+}
+void BigTree::wanquan()
+{
+	int n=1;
+	int flag=0;
+	int j = 1;
+	BiNode *Q[100];
+	BiNode *q;
+	int front;
+	int rear;
+	front = rear = -1;
+	if (root == NULL)return;
+	Q[++rear] = root;
+	while (front != rear)
+	{
+		q = Q[++front];
+		if (q->lchild != NULL)
+		{
+			Q[++rear] = q->lchild;
+			flag = 2*j;
+			n++;
+		}
+		if (q->rchild != NULL)
+		{
+			Q[++rear] = q->rchild;
+		    flag = 2*j + 1;
+			n++;
+			j++;
+		}
+	}
+	if (j == n)
+	{
+		cout << "yes";
+	}
+	else
+		cout << "no";
+}
+void BigTree::parents()
+{
+	char x;
+	cin >> x;
+	BiNode *Q[100];
+	BiNode *q;
+	int front;
+	int rear;
+	front = rear = -1;
+	if (root == NULL)return;
+	Q[++rear] = root;
+	while (front != rear)
+	{
+		q = Q[++front];
+		if (q->lchild != NULL)
+		{
+			Q[++rear] = q->lchild;
+			if (q->lchild->data == x)
+			{
+				cout << q->data;
+			}
+		}
+		if (q->rchild != NULL)
+		{
+			Q[++rear] = q->rchild;
+			if (q->rchild->data == x)
+			{
+				cout << q->data;
+			}
+		}
+	}
+}*/
+//第五题
+#include <iostream>
+using namespace std;
+enum flag {child,thread};
+struct ThrNode
+{
+	int data;
+	ThrNode *lchild,*rchild;
+	flag ltag, rtag;
+};
+class Inthrbitree
+{
+public:
+	Inthrbitree();
+	~Inthrbitree(){}
+	ThrNode *next(ThrNode *p);
+	void Inorder();
+private:
+	ThrNode *root;
+	ThrNode *creat(ThrNode *bt);
+	void Thrbitree(ThrNode *bt, ThrNode *pre);
+};
+int main()
+{
+	Inthrbitree st;
+	st.Inorder();
+	return 0;
+}
+ThrNode *Inthrbitree::creat(ThrNode*bt)
+{
+	int ch;
+	cin >> ch;
+	if (ch == '#')bt = NULL;
+	else
+	{
+		bt = new ThrNode;
+		bt->data = ch;
+		bt->ltag = child;
+		bt->rtag = child;
+		bt->lchild = creat(bt->lchild);
+		bt->rchild = creat(bt->rchild);
+	}
+	return bt;
+}
+void Inthrbitree::Thrbitree(ThrNode*bt,ThrNode*pre)
+{
+	if (bt == NULL)return;
+	Thrbitree(bt->lchild, pre);
+	if (bt->lchild == NULL)
+	{
+		bt->ltag = thread;
+		bt->lchild = pre;
+	}
+	if (bt->rchild == NULL)bt->rtag = thread;
+	if (pre->rtag == 1)pre->rchild = bt;
+	pre = bt;
+	Thrbitree(bt->rchild, pre);
+}
+Inthrbitree::Inthrbitree()
+{
+	ThrNode*pre;
+	root = creat(root);
+	pre = NULL;
+	Thrbitree(root, pre);
+}
+ThrNode*Inthrbitree::next(ThrNode*p)
+{
+	ThrNode*q;
+	if (p->rtag == 1)q = p->rchild;
+	else
+	{
+		q = p->rchild;
+		while (q->ltag == 0)
+		{
+			q = q->lchild;
+		}
+	}
+	return q;
+}
+void Inthrbitree::Inorder()
+{
+	ThrNode *p;
+	if (root == NULL)return;
+	p = root;
+	while (p->ltag == child)
+		p = p->lchild;
+	cout << p->data;
+	while (p->rchild != NULL)
+	{
+		p = next(p);
+		cout << p->data;
+	}
+}

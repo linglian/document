@@ -1,0 +1,281 @@
+/*     （1）求叶子结点个数；
+       （2）求二叉树的深度；
+       （3）判断一棵二叉树是否是完全二叉树；
+       （4）求某结点的双亲结点；
+       （5）建立线索二叉树并输出。*/
+#include<iostream>
+#include<cmath>
+#include <iomanip>
+using namespace std;
+struct Node
+{
+char num;
+struct Node *lchila,*rchila;
+};
+enum flag{child,thread};
+struct Node2
+{
+char num2;
+struct Node2 *lchila1,*rchila1;
+flag ltag,rtag;
+};
+class Bitree
+{
+public:
+	 Bitree(){root=NULL;js=NULL;a=0;b=0;c=0;p1=NULL;ph=NULL;}
+	 void set(){root=creat(root);}
+	~Bitree(){release(root);release2(js);}
+     void Qian(){Qian(root);cout << endl;} //前 
+	 void Zhong(){Zhong(root);cout << endl;}  //中
+	 void Hou(){Hou(root);cout << endl;} //后
+	 void Ceng(){ Ceng(root);cout << endl;}//层
+     void shendu();
+	 void Panduan(){panduan(root);}
+	 void depth(){cout << jisuan(root);}
+	 void set2(){js=Creat(js);}
+	 void jj(){Node2*p;p=NULL;kl=Zhong2(js,p);}
+	 void display(){display(kl);}
+	 void Find(){Node *p;cout << "请输入要查找的结点:\n";char ch;cin>>ch;p=find(root, ch);if(p==NULL){cout << "NULL" << endl;return;}else{cout <<" 双亲结点为:\n" ;cout << p->num<<endl;return;}}
+private:
+Node *root;int a,b,c;Node2*js,*p1;Node *ph;Node2*kl;
+Node *creat(Node *bt);Node2*Creat(Node2*bt);Node2* Next(Node2 *p);
+void Qian(Node*bt);  //前 
+void Zhong(Node*bt);  //中
+void Hou(Node*bt);//后
+void Ceng(Node*bt);
+void release(Node*bt);
+void panduan(Node*bt);
+int jisuan(Node*bt);
+Node2* Zhong2(Node2*bt,Node2*p);
+void release2(Node2*bt);
+Node*  find(Node*bt,char ch);
+void display(Node2*bt);
+};
+Node* Bitree::find(Node*bt,char x)
+{  Node*p;p=NULL;
+if(bt)
+{
+if(bt->num==x){ return p;}
+else
+{
+p=bt;
+find(bt->lchila,x);if(bt->num==x) return ph;
+find(bt->rchila,x);if(bt->num==x) return ph;
+}
+}
+return p;
+}
+void Bitree::release2(Node2*bt)
+{
+if(bt!=NULL)
+{
+release2(bt->lchila1);
+release2(bt->rchila1);
+delete bt;
+}
+}
+Node2* Bitree::Next(Node2 *p)
+{
+Node2*q;
+if(p->rtag==thread)q=p->rchila1;
+else
+{
+q=p->rchila1;
+while(q->ltag==child)
+q=q->lchila1;
+}
+return q;
+}
+void Bitree::display(Node2*bt)
+{
+	if(bt==NULL)return;
+	Node2 *p;
+	p=bt;
+	while(p->ltag==child)
+		p=p->lchila1;
+	cout <<p->ltag<< " " <<p->num2 << p->rtag << endl;;
+	while(p->rchila1!=NULL)
+	{
+p=Next(p);
+cout <<p->ltag<< " " <<p->num2 << p->rtag << endl;;
+	}
+}
+Node2* Bitree::Zhong2(Node2*bt,Node2*p)
+{
+if(bt==NULL) return p ;
+Zhong2(bt->lchila1,p);
+if(bt->lchila1==NULL)
+{bt->ltag=thread;
+bt->lchila1=p;
+}
+if(bt->rchila1==NULL) bt->rtag=thread;
+if(p->rtag==thread)p->rchila1=bt;
+p=bt;
+Zhong2(bt->rchila1,p);
+return p;
+}
+
+Node2*Bitree::Creat(Node2*bt)
+{
+char ch;
+cin >> ch;
+if(ch=='#')bt=NULL;
+else
+{
+bt=new Node2;bt->num2=ch;
+bt->ltag=child;bt->rtag=child;
+bt->lchila1=Creat(bt->lchila1);
+bt->rchila1=Creat(bt->rchila1);
+}
+return bt;
+}
+
+int Bitree::jisuan(Node*bt)
+{
+int b1=0,b2=0;
+if(root!=NULL)
+{
+	if(bt->lchila!=NULL)
+	{
+b1=jisuan(bt->lchila);
+	}
+	if(bt->rchila!=NULL)
+	{	
+b2=jisuan(bt->rchila);
+	}
+}
+return (b1>b2?b1:b2)+1;
+}
+
+void Bitree::panduan(Node*bt)
+{
+
+int front=-1,rear=-1;Node*Q[100],*p;
+int bj=1,cm=1;
+if(bt)
+{
+Q[++rear]=root;
+while(front!=rear)
+{
+p=Q[++front];
+if(!p->lchila)
+{
+bj=0;if(!p->rchila)cm=0;
+
+}
+else
+{
+cm=bj;
+Q[++rear]=p->lchila;
+if(!p->rchila) bj=0;
+else Q[++front]=p->rchila;
+}
+}
+}
+if(cm==0){ cout<<"该树不是一个完全二叉树!\n";return;}
+else {cout<<"该树是一个完全二叉树!\n";return;}
+}
+void Bitree::Ceng(Node*bt)
+{
+int front=-1,rear=-1;Node*Q[100];Node *q;
+if(root==NULL) return ;
+Q[++rear]=root;
+while(front!=rear)
+{
+q=Q[++front];
+cout << q->num;
+if(q->lchila!=NULL)Q[++rear]=q->lchila;
+if(q->rchila!=NULL)Q[++rear]=q->rchila;
+}
+}
+void Bitree::Qian(Node *bt)
+{
+if(bt==NULL) return;
+else
+{
+cout << bt->num;
+Qian(bt->lchila);Qian(bt->rchila);
+}
+}
+void Bitree::Zhong(Node*bt)
+{
+if(bt==NULL) return;
+else
+{
+Zhong(bt->lchila);
+cout << bt->num;
+Zhong(bt->rchila);
+}
+}
+void Bitree::Hou(Node*bt)
+{
+if(bt==NULL) return ;
+else
+{
+Hou(bt->lchila);Hou(bt->rchila);
+cout << bt->num;
+}
+}
+Node* Bitree::creat(Node *bt)
+{
+char  ch;
+cin>>ch;
+if(ch=='#') { bt=NULL;}
+else
+{   
+bt=new Node;bt->num=ch;
+bt->lchila=creat(bt->lchila);
+bt->rchila=creat(bt->rchila);
+if(bt->lchila!=NULL)
+	a++;
+if(bt->rchila!=NULL)
+b++;
+if(bt->lchila==NULL&&bt->rchila==NULL)
+c++;
+}
+return bt;
+}
+
+void Bitree::shendu()
+{int count=0;
+cout << "该树的叶子结点为："<<c << endl;
+ a=a+b+1;
+a=a+1;
+while(a!=1)
+{
+a=a/2;count++;
+if(a%2!=0&&a!=1){cout << "该树不是满树！\n";break;}
+}
+if(count==jisuan(root)){cout << "该树是满树！\n";}
+}
+void Bitree::release(Node*bt)
+{
+if(bt!=NULL)
+{
+release(bt->lchila);
+release(bt->rchila);
+delete bt;
+}
+}
+int main()
+{   cout<<"请输入一个二叉树:\n";
+	Bitree p;p.set();p.shendu();
+	cout << "前序输出:\n";
+	p.Qian();
+	cout << "后序输出:\n";
+	p.Hou();
+	cout << "中序输出:\n";
+	p.Zhong();
+	cout << "层序输出:\n";
+	p.Ceng();
+	p.Panduan();
+	cout << "二叉树的深度:\n";
+	p.depth();
+	cout << endl;
+	p.Find();
+	cout << "建立二叉链表:\n";
+	p.set2();
+	//p.jj();
+	//p.display();
+return 0;
+}

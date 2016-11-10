@@ -1,0 +1,80 @@
+﻿using UnityEngine;
+using System.Collections;
+
+public class Player : MonoBehaviour
+{
+	public GameObject snake;
+	public GameObject snakeBody;
+	public float speed;
+	Queue bodyQueue;
+	float moveCount = 0;
+	float maxMoveCount = 1f;
+	int face;
+	Vector3 right;
+	Vector3 left;
+	Vector3 forward;
+	Vector3 back;
+	CharacterController controller;
+	// Use this for initialization
+	void Start ()
+	{
+		maxMoveCount /= speed;
+		controller = snake.GetComponent<CharacterController> ();
+		face = 0;
+		right = snake.transform.TransformDirection(Vector3.right)*speed;
+		left = snake.transform.TransformDirection(Vector3.left)*speed;
+		forward = snake.transform.TransformDirection(Vector3.forward)*speed;
+		back = snake.transform.TransformDirection(Vector3.back)*speed;
+	}
+	void moveHead(){
+		moveCount += Time.deltaTime;
+		if (moveCount >= maxMoveCount) {
+			moveCount = 0;
+			Vector3 pos = snake.transform.position;
+			switch (face) {
+			case 0:
+				pos.z -= 1;
+				break;
+			case 1:
+				pos.z += 1;
+				break;
+			case 2:
+				pos.x += 1;
+				break;
+			case 3:
+				pos.x -= 1;
+				break;
+			}
+			bodyQueue.Enqueue(Instantiate (snakeBody,pos,Quaternion.identity));	
+		}
+		switch (face) {
+		case 0:
+			controller.Move (forward*Time.deltaTime);
+			break;
+		case 1:
+			controller.Move (back*Time.deltaTime);
+			break;
+		case 2:
+			controller.Move (left*Time.deltaTime);
+			break;
+		case 3:
+			controller.Move (right*Time.deltaTime);
+			break;
+		}
+	}
+	// Update is called once per frame
+	void Update ()
+	{
+		if (Input.GetKey (KeyCode.W)) {
+			this.face = 0;
+		}else if (Input.GetKey (KeyCode.S)) {
+			this.face = 1;
+		}else if (Input.GetKey (KeyCode.A)) {
+			this.face = 2;
+		}else if (Input.GetKey (KeyCode.D)) {
+			this.face = 3;
+		}
+
+		moveHead ();
+	}
+}

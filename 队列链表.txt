@@ -1,0 +1,88 @@
+#include<iostream>
+using namespace std;
+#define MAXSIZE 100
+
+template<class DataType>
+class Node{
+	public:
+		Node(DataType a){
+			data =a;
+		}
+	DataType data;
+	Node *next;
+};
+template<class DataType>
+class Queue{
+	public:
+		Queue(){
+			head = NULL;
+			tail = NULL;
+		}
+		void push(Node<DataType>* x){
+			if(head==NULL||tail==NULL){
+				head = x;
+				tail = x;
+			}
+			tail->next = x;
+			tail = x;
+		}
+		Node<DataType>* pop(){
+			char *a = "None";
+			if(head==NULL) throw a;
+			Node<DataType>* temp = head; 
+			if(head==tail){
+				head=NULL;
+				tail=NULL; 
+				return temp;
+			}
+			head = temp->next;
+			if(head==NULL){
+				tail = NULL;
+			}
+			return temp;
+		}
+		Node<DataType>* getTop(){
+			char *a = "None";
+			if(head==NULL) throw a;
+			return head;
+		}
+		bool empty(){
+			return head==NULL&&tail==NULL?true:false;
+		}
+		void clear(){
+			head = NULL;
+			tail = NULL;
+		}
+	private:
+		Node<DataType> *head;
+		Node<DataType> *tail;
+};
+int main(){
+	char a,b;
+	Queue<char> queue;
+	cin>>a;
+	while(a!='Q'){
+		try{
+		switch(a){
+			case 'E':
+			cin>>b;
+			queue.push(new Node<char>(b));
+			break;
+			case 'D':
+				cout<<queue.pop()->data<<endl;
+				break;
+			case 'G':
+				cout<<queue.getTop()->data<<endl;
+				break;
+			case 'C':
+				queue.clear();
+				break;
+		}
+	}catch(char *a){
+		cout<<a<<endl;
+	}
+		cin>>a;
+	}
+	return 0;
+}
+

@@ -1,0 +1,157 @@
+#include<iostream>
+using namespace std;
+struct Node
+{
+	char data;
+	Node *lchild, *rchild;//左孩子，右孩子
+};
+class BiTree
+{
+public:
+	BiTree() { root = creat(root); }//建立二叉树
+	void PreOrder() { PreOrder(root); cout << endl; }//前序遍历
+	void InOrder() { InOrder(root); cout << endl; }//中序遍历
+	void IsParents(char x) { IsParents(root, x); }//寻找双亲节点 参数x为输入节点的值
+	void change() { change(root); cout << "已转换为线索二叉树" << endl; }//转换为线索二叉树
+	void LeafNumber() { cout << "叶子个数：" << leaf << endl; }//输出叶子个数
+	void getDeep() { cout << "深度：" << deep(root) << endl; }//输出二叉树深度
+	void IsComplete()//判断是否为完全二叉树
+	{
+		Node *Q[20];//将所有节点的指针存入此指针数组
+		Node *q;//工作指针
+		int front, rear, i = 0;//front, rear用于遍历队列，i为标记 初始化为0 并储存第一个左孩子为空的节点的序号
+		front = rear = -1;
+		if (root == NULL)return;//若根为空函数结束
+		Q[++rear] = root;//根节点入队
+		while (front != rear)
+		{
+			q = Q[++front];
+			if (q->lchild != NULL)//左孩子不为空则入队
+				Q[++rear] = q->lchild;
+			else
+				if (q->lchild == NULL&&i == 0)//若一节点左孩子为空 且i为初始值 则记录这个节点的序号
+					i = front;
+			if (q->rchild != NULL)//右孩子不为空则入队
+				Q[++rear] = q->rchild;
+		}
+		if (Q[i]->rchild != NULL)//i标记的节点左孩子已为空 若右孩子不为空则不是完全二叉树
+		{
+			cout << "不是完全二叉树" << endl;
+			return;
+		}
+		for (i = i + 1; i < front; i++)
+		{
+			if (Q[i]->lchild != NULL || Q[i]->rchild != NULL)//i标记的节点左右孩子已为空 若剩吓的节点仍有左右孩子 则不是完全二叉树
+			{
+				cout << "不是完全二叉树" << endl;
+				return;
+			}
+		}
+		cout << "是完全二叉树" << endl;
+
+	}
+private:
+	static int leaf;//叶子个数
+	Node * root;//根节点
+	Node * creat(Node *bt)//创建根节点
+	{
+		char ch;//储存输入节点的值
+		cin >> ch;
+		if (ch == '#')//若输入#则表示为空
+		{
+			bt = NULL;
+		}
+		else {
+			bt = new Node;
+			bt->data = ch;//存储输入节点的值
+			bt->lchild = creat(bt->lchild);//继续输入左孩子
+			bt->rchild = creat(bt->rchild);//继续输入右孩子
+			if (bt->lchild == NULL&&bt->rchild == NULL)//若一节点左右孩子都为空则此节点为叶子节点
+				leaf++;
+		}
+		return bt;
+	}
+	void PreOrder(Node *bt)//前序遍历
+	{
+		if (bt == NULL)
+			return;
+		else {
+			cout << bt->data;
+			PreOrder(bt->lchild);
+			PreOrder(bt->rchild);
+		}
+	}
+	void InOrder(Node *bt)//中序遍历
+	{
+		if (bt == NULL) { return; }
+		else {
+			InOrder(bt->lchild);
+			cout << bt->data;
+			InOrder(bt->rchild);
+		}
+	}
+	int deep(Node *bt)//计算树的深度
+	{
+		if (bt == NULL)
+		{
+			return 0;//若bt为空 则当前节点深度为0
+		}
+		else
+		{
+			int ldeep = deep(bt->lchild);//左孩子的深度
+			int rdeep = deep(bt->rchild);//右孩子的深度
+			return ldeep > rdeep ? ldeep + 1 : rdeep + 1;//返回左右孩子深度的最大值 每次+1
+		}
+	}
+	void IsParents(Node *bt, char x)//寻找双亲
+	{
+		if (bt->lchild != NULL)//若左孩子不为空则判断左孩子的值是否为输入值
+			if (bt->lchild->data == x)
+				cout << x << "的双亲为：" << bt->data << endl;
+			else
+				IsParents(bt->lchild, x);//否则继续从左孩子寻找
+		if (bt->rchild != NULL)//同上
+			if (bt->rchild->data == x)
+				cout << x << "的双亲为：" << bt->data << endl;
+			else
+				IsParents(bt->rchild, x);
+	}
+	void change(Node *bt)//转换成线索二叉树
+	{
+		if (bt->lchild == NULL)//若左孩子为空 则为左孩子开辟空间 存入‘#’并将新节点的左右孩子赋值为空
+		{
+			bt->lchild = new Node;
+			bt->lchild->data = '#';
+			bt->lchild->lchild = NULL;
+			bt->lchild->rchild = NULL;
+		}
+		else
+			change(bt->lchild);//否则继续从左孩子寻找
+		if (bt->rchild == NULL)//同上
+		{
+			bt->rchild = new Node;
+			bt->rchild->data = '#';
+			bt->rchild->lchild = NULL;
+			bt->rchild->rchild = NULL;
+		}
+		else
+			change(bt->rchild);
+		if (bt == root)return;//若根节点左右都转换结束 则结束
+	}
+
+
+};
+int BiTree::leaf = 0;//类外初始化 static修饰变量
+int main()
+{
+	//测试
+	BiTree b;
+	b.PreOrder();
+	b.LeafNumber();
+	b.getDeep();
+	b.IsComplete();
+	b.IsParents('e');
+	b.change();
+	b.PreOrder();
+	return 0;
+}

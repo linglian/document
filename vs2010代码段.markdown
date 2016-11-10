@@ -1,0 +1,44 @@
+# vs2010代码段制作笔记
+--- 
+*这次来介绍vs2010代码块的制作和使用*  
+## 什么是代码段  
+代码段我在理解看来，就是一键来生成一段代码，让我们程序员可以更好的编写代码，提高代码的重用性，我在这里教一下怎么来制作自己的一个简单的注释  
+## 代码  
+因为我自己也不是很熟，所以直接上代码了，这里转一个链接，大家也可以看看  
+[VS2010代码段教程](http://blog.csdn.net/snakorse/article/details/44097545 "")  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>#note</Title>
+			<Shortcut>#note</Shortcut>
+			<Description>注释 代码段</Description>
+			<Author>凌恋</Author>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+				<SnippetType>SurroundsWith</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>str</ID>
+					<ToolTip>注释的内容</ToolTip>
+					<Default>在这里写注释</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="csharp"><![CDATA[
+	/*******************
+	 *$str$
+	 *
+	 *
+	 *******************/]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+</CodeSnippets>
+```  
+在按照教程里方法导入就可以了。用的时候写上#note+tab就可以了  
+## 结尾  
+主要对这个还不是很熟悉，所以还是不要说太多，免得误导他人，大家可以看文章中的链接来自己学习学习

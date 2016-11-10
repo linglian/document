@@ -1,0 +1,213 @@
+#include<iostream>
+#include<cstring>
+using namespace std;
+
+
+/*
+*HuffmanNode设计思路：需要知道每一个结点的权值，数据，左右孩子，和双亲。
+*叶子结点的全值：是对叶子结点赋予的一个有意义的数值量 
+*/
+
+class HuffmanNode{
+	public:
+		int weight;
+		int lchild;
+		int rchild;
+		int parent;
+		char data;
+		HuffmanNode(){
+			weight = -1;
+			lchild = -1;
+			rchild = -1;
+			parent = -1;
+			data = 0;
+		}
+}; 
+/*
+*类HuffmanTree设计思路：
+*需要一个最基本的根节点root和总结点个数sumSize
+*由于哈弗曼树的特殊结构，还需要一个统计叶子结点个数的leavesNode 
+*/
+class HuffmanTree{
+	private:
+		int root;									//根结点 
+		int leavesNode;								//叶子结点个数 
+		int sumNode;								//总结点个数 
+		HuffmanNode *huffTree;
+		void select(int &i1,int &i2){				//私有方法select(int &i1,int &i2)查找全值最小的两个根节点 
+			for(int i = 0;i < sumNode;i++){			//遍历找出最小的两个根节点
+				if(huffTree[i].parent != -1){					
+					continue;
+				}else{									
+					if(huffTree[i1].parent != -1){
+						i1 = i;
+					}else if(huffTree[i2].parent != -1){
+						i2 = i;
+					}else if(huffTree[i1].weight > huffTree[i2].weight){
+						int temp = i1;
+						i1 = i2;
+						i2 = temp;
+					} else if(i2 != i && huffTree[i1].weight > huffTree[i].weight){
+						i1 = i;
+					}else if(i1 != i && huffTree[i2].weight > huffTree[i].weight){
+						i2 = i;
+					}
+				}
+			}
+		}
+	public:
+		HuffmanTree(){											//构造函数 
+			root = -1;
+		}
+		~HuffmanTree(){}
+		void CreatHuffmanTree(HuffmanNode *hfn,int n){			//建立哈弗曼树		
+			this->leavesNode = n;
+			huffTree = new HuffmanNode[leavesNode*2-1];
+			sumNode = n;
+			for(int i = 0;i < 2*n-1;i++){
+				huffTree[i].parent = -1;
+				huffTree[i].lchild = -1;
+				huffTree[i].rchild = -1;
+			}
+			for(int i = 0;i < n;i++){
+				huffTree[i].weight = hfn[i].weight;
+				huffTree[i].data = hfn[i].data;
+		 }
+			int i1 = 0;
+			int i2 = 1;
+			for(int k = n;k < 2*n-1;k++){
+				int i1 = 0;
+				int i2 = 1;
+				select(i1,i2);
+				huffTree[i1].parent = k;					//未加入到哈弗曼树的parent域的值为-1 
+				huffTree[i2].parent = k;
+				huffTree[k].weight = huffTree[i1].weight + huffTree[i2].weight;
+				huffTree[k].lchild = i1;
+				huffTree[k].rchild = i2;
+				sumNode++;
+			}
+			root = 2*n-2;
+		}
+		
+		char* Coding(char *str){									//编码
+		/*
+		*利用ASCII码值的唯一性 
+		*/						
+			int weight[128] = {0};
+			int length = strlen(str);
+			for(int i = 0;i < length;i++){
+				if(str[i] >= 0 && str[i] <= 127){
+					weight[str[i]]++;
+				}
+			}
+			HuffmanNode *huff = new HuffmanNode[128];
+			int size = 0;
+			for(int i = 0;i < 128;i++){
+				if(weight[i] != 0){
+					huff[size].data = i;
+					huff[size].weight = weight[i];
+					size++;
+				}
+			} 
+			CreatHuffmanTree(huff,size);
+			char *string = new char[size*10];
+			string[0] = '\0';
+			for(int i = 0;str[i] != '\0';i++){
+				strcat(string,coding_first(str[i]));
+			}
+			return string;
+		}
+		
+		char* coding_first(char c){
+			char* coding_final = NULL;
+			coding_final = getPath(c,root);
+			return coding_final;
+		}
+		char* getPath(char c,int k){								//获取编码路径 
+		/*
+		*递归判断是否为符合要求，即是否是叶子节点，并且数据域值与传入的值相同。
+		*再进行左零右一的编码规则，进行编码 
+		*/
+			char* temp = NULL;
+			if(huffTree[k].lchild != -1){
+				temp = getPath(c,huffTree[k].lchild);
+				if(temp != NULL){
+					return temp;
+				}
+			}
+			if(huffTree[k].rchild != -1){
+				temp = getPath(c,huffTree[k].rchild);
+				if(temp != NULL){
+					return temp;
+				}
+			}
+			if(huffTree[k].lchild == -1&&huffTree[k].rchild == -1&&huffTree[k].data == c){
+				char *path;
+//				cout<<"156546"<<endl;
+				path = new char[this->leavesNode+1];
+				int i = 0;
+				int end = -1;
+				while(huffTree[k].parent != -1){
+					end = k;
+					k = huffTree[k].parent;
+					if(huffTree[k].lchild == end){
+						path[i++] = 0 + '0';
+					}else if(huffTree[k].rchild == end){
+						path[i++] = 1 + '0';
+					}
+				}
+				path[i] = '\0';
+				temp = strrev(path);
+				return temp;
+			}
+			return temp;
+		}
+		
+	
+		char* Decoding(char* string){									//解码 
+		/*
+		*利用建立哈弗曼树时的结构，遍历到相应的叶子节点进行输出 
+		*/
+			if(sumNode == -1){
+				throw "哈弗曼树还没有建好~";
+			}
+			char* decoding = new char[strlen(string)];
+			decoding[0] = '\0';
+			int length = 0;
+			int i = 0;
+			int sumNode = root;
+			while(string[i] != '\0'){
+				switch(string[i++]){
+					case '0':{
+						sumNode = huffTree[sumNode].lchild;
+						break;
+					}
+					case '1':{
+						sumNode = huffTree[sumNode].rchild;
+						break;
+					}
+				}
+				if(huffTree[sumNode].rchild == -1&&huffTree[sumNode].lchild == -1){
+					decoding[length++] = huffTree[sumNode].data;
+					decoding[length] = '\0';
+					sumNode = root;
+				}
+			}
+			return decoding;
+		}
+};
+
+
+int main(){
+	char str[1000];
+	HuffmanTree *tree = new HuffmanTree();
+	cout<<"请输入要编码的字符串"<<endl;
+	cin>>str;
+	cout<<"编码为"<<endl;
+	cout<<tree->Coding(str)<<endl;
+	cout<<"请输入要翻译的二进制编码"<<endl;
+	cin>>str;
+	cout<<"转译为"<<endl;
+	cout<<tree->Decoding(str)<<endl;
+	return 0; 
+}

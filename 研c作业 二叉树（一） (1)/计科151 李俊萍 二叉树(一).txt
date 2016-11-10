@@ -1,0 +1,405 @@
+#include<iostream>
+using namespace std;
+#define MAXSIZE 100
+/*建立二叉树的类，结点类为数据和二个左右孩子结点指针
+完成基本的创建，前中后层遍历操作
+并在此基础上完成对二叉树的统计和计算 
+*/
+//结点类 
+template<class DataType>
+class BiNode{
+public:
+	BiNode(DataType data){
+		this->data = data;
+		lTag = 0;
+		rTag = 0;
+		lChild = NULL;
+		rChild = NULL;
+	}
+	int lTag,rTag;
+	DataType data;
+	BiNode<DataType> *lChild,*rChild;
+};
+//二叉树类 
+template<class DataType>
+class BiTree{
+public:
+	BiTree(DataType endFlag){
+		isThread = 0;
+		this->endFlag = endFlag; 
+		root = NULL;
+	}
+	void inThrBiTree(){//中序线索化 
+		pre= NULL;
+		inThrBiTree(root);
+		isThread = 2;
+	} 
+	void beNormal(){
+		
+	}
+	void creat(){//创建 
+		destory(root);
+		isThread = 0;
+		root = this->creat(root);
+	}
+	void preOrder(){//前序遍历
+		this->preOrder(root);
+		cout<<endl;
+	}
+	void inOrder(){//中序遍历 
+		this->inOrder(root); 
+		cout<<endl;
+	}
+	void postOrder(){//后序遍历 
+		this->postOrder(root);
+		cout<<endl;
+	}
+	void leverOrder(){//层序遍历 
+		int front = -1;
+		int rear = -1;
+		if(root==NULL){
+			return;
+		}
+		BiNode<DataType> *queue[MAXSIZE];
+		queue[++rear] = root;
+		while(front!=rear){
+			BiNode<DataType> *bt = queue[++front];
+			cout<<bt->data<<' ';
+			if(bt->lChild!=NULL) queue[++rear] = bt->lChild;
+			if(bt->rChild!=NULL) queue[++rear] = bt->rChild;
+		}
+		cout<<endl;
+	}
+	void destory(){//销毁 
+		destory(root);
+	}
+	int getNodeCount(){//统计结点个数 
+		return getNodeCount(root)-1;
+	}
+	BiNode<DataType> *inThrTreeNextNode(BiNode<DataType> *bt){//线索二叉树找后续 
+		char *a = "当前树不为中序线索二叉树";
+		if(this->isThread!=2){
+			throw a;
+		} 
+		if(bt->rTag==1){
+			return bt->rChild;
+		}
+		else{
+			bt = bt->rChild;
+			while(bt->lTag==0){
+				bt = bt->lChild;
+			}
+		}
+		return bt;
+	}
+	BiNode<DataType> * findParent(BiNode<DataType> *target){//找target结点的双亲 
+		return findParent(root,target);
+	}
+	void InThrOrder(){//中序线索输出 
+		char *a = "当前树不为中序线索二叉树";
+		if(this->isThread!=2){
+			throw a;
+		} 
+		if(root==NULL)
+			return;
+		BiNode<DataType> *bt = root;
+		while(bt->lChild!=NULL&&bt->lTag==0){
+			bt = bt->lChild;
+		}
+		
+		while(bt!=NULL){
+			cout<<bt->lTag<<' '<<bt->data<<' '<<bt->rTag<<endl;
+			bt = inThrTreeNextNode(bt);
+		}
+	}
+	void leaveOrder(){//输出叶子 
+		leaveOrder(root);
+		cout<<endl;
+	} 
+	int getDeath(){//统计深度 
+		return getDeath(root);
+	}
+	int leaveOrderCount(){
+		return leaveOrderCount(root);
+	}
+	bool isComBiTree(){//判断完全二叉树 
+		int front = -1;
+		int rear = -1;
+		if(root==NULL){
+			return true;
+		}
+		BiNode<DataType> *queue[MAXSIZE];
+		queue[++rear] = root;
+		while(front!=rear){
+			BiNode<DataType> *bt = queue[++front];
+			if(bt==NULL){
+				return false;
+			}
+			if(bt->lChild==NULL&&bt->rChild==NULL){
+			
+			}else{
+				if(bt->lTag==0) {
+					queue[++rear] = bt->lChild;
+				}
+				else{
+					queue[++rear] = NULL;
+				}
+				if(bt->rTag==0) {
+					queue[++rear] = bt->rChild;
+				}
+				else{
+					queue[++rear] = NULL;
+				}
+			}
+		}
+		return true;
+	}
+	BiNode<DataType> *getRoot(){
+		return root;
+	}
+	~BiTree(){//析构调用销毁 
+		destory();
+	}
+private:
+	int isThread;//是否为线索树（默认为0,1为前序，2为中序，3为后序，4为层序） 
+	BiNode<DataType> *root; 
+	DataType endFlag;//创建时结束标记 
+	BiNode<DataType> *pre;
+	
+	int leaveOrderCount(BiNode<DataType> *bt){
+		if(bt==NULL){
+			return 0;
+		}
+		if(bt->lChild==NULL&&bt->rChild==NULL){
+			return 1;
+		}else{
+			return leaveOrderCount(bt->lChild)+leaveOrderCount(bt->rChild);
+		}
+	} 
+	void inThrBiTree(BiNode<DataType> *bt){
+		if(bt==NULL){
+			return;
+		}
+		inThrBiTree(bt->lChild);
+		if(bt->lChild==NULL){
+			bt->lTag = 1; 
+			bt->lChild = pre;
+		}
+		if(bt->rChild==NULL){
+			bt->rTag = 1;
+		}
+		if(pre!=NULL&&pre->rTag==1){
+			pre->rChild = bt;
+		}
+		pre = bt;
+		inThrBiTree(bt->rChild);
+	}
+	
+	BiNode<DataType> * findParent(BiNode<DataType> *bt,BiNode<DataType> *target){
+		if(bt==NULL){
+			return NULL;
+		}
+		BiNode<DataType> *temp;
+		if(bt->lChild==target||bt->rChild==target){
+			return bt;
+		}
+		if(bt->lTag==0){
+			temp = findParent(bt->lChild,target);
+			if(temp!=NULL){
+				return temp;
+			}
+		}
+		if(bt->rTag==0){
+			temp = findParent(bt->rChild,target);
+			if(temp!=NULL){
+				return temp;
+			}
+		}
+		return NULL;
+	}
+	void preOrder(BiNode<DataType> *bt){
+		if(bt==NULL){
+			return;
+		}
+		cout<<bt->data<<' ';
+		if(bt->lTag==0)
+		preOrder(bt->lChild);
+		if(bt->rTag==0)
+		preOrder(bt->rChild);
+	}
+	void inOrder(BiNode<DataType> *bt){
+		if(bt==NULL){
+			return;
+		}
+		if(bt->lTag==0)
+		inOrder(bt->lChild);
+		cout<<bt->data<<' ';
+		if(bt->rTag==0)
+		inOrder(bt->rChild);
+	}
+	void postOrder(BiNode<DataType> *bt){
+		if(bt==NULL){
+			return;
+		}
+		if(bt->lTag==0)
+		postOrder(bt->lChild);
+		if(bt->rTag==0)
+		postOrder(bt->rChild);
+		cout<<bt->data<<' ';
+	}
+	
+	void leaveOrder(BiNode<DataType> *bt){
+		if(bt==NULL){
+			return;
+		}
+		if(bt->lChild==NULL&&bt->rChild==NULL||(bt->lTag==0&&bt->rTag==0)){
+			cout<<bt->data<<' ';
+		}else{
+			if(bt->lTag==0)
+			leaveOrder(bt->lChild);
+			if(bt->rTag==0)
+			leaveOrder(bt->rChild);
+		}
+	} 
+	BiNode<DataType> *creat(BiNode<DataType> *bt){
+		DataType ch;
+		cin>>ch;
+		if(ch==endFlag){
+			bt = NULL;
+		}else{
+			bt = new BiNode<DataType>(ch);
+			bt->lChild = creat(bt->lChild);
+			bt->rChild = creat(bt->rChild);
+		}
+		return bt;
+	}
+	
+	int getNodeCount(BiNode<DataType> *bt){
+		if(bt==NULL){
+			return 1;
+		}else{
+			if(bt->lTag==0&&bt->rTag==0)
+				return getNodeCount(bt->lChild)+getNodeCount(bt->rChild);
+			else if(bt->lTag==0)
+				return getNodeCount(bt->lChild)+1;
+			else if(bt->rTag==0){
+				return 1+getNodeCount(bt->lChild);
+			}else{
+				return 1;
+			}
+		}
+	}
+	int getDeath(BiNode<DataType> *bt){
+		int death = 0;
+		if(bt!=NULL){
+			int lDeath = 0;
+			int rDeath = 0;
+			if(bt->lTag==0)
+				lDeath = getDeath(bt->lChild);
+			if(bt->rTag==0)
+				rDeath = getDeath(bt->rChild);
+			if(lDeath>rDeath){
+				death = lDeath+1;
+			}else{
+				death = rDeath+1;
+			}
+		}
+		return death;
+	}
+	void destory(BiNode<DataType> *bt){
+		if(bt==NULL){
+			return;
+		}
+			if(bt->lTag==0)
+				destory(bt->lChild);
+			if(bt->rTag==0)
+				destory(bt->rChild);
+		delete bt;
+	}
+};
+/*	测试函数 
+括号内为正确的输出结果 
+后面的为输入数据 
+*/
+
+//测试用例(6)   	a b c # # # d e # # f # #
+//测试用例(NULL)   	#
+void test_1(){//求叶子结点个数 测试 
+	BiTree<char> *tree = new BiTree<char>('#');
+	tree->creat();
+	int size = tree->leaveOrderCount();
+	if(size!=0){
+		cout<<size;
+	}
+	else{
+		cout<<"NULL";
+	}
+	delete tree;
+}
+/*测试用例(6,4,0)
+A B # # C D # E # F # # G H # I K # # # #
+A B D H # # I # # E J # # K # # C F L # # M # # G N # # O # #
+#
+*/
+void test_2(){//求二叉树的深度 测试 
+	BiTree<char> *tree = new BiTree<char>('#');
+	while(true){
+	tree->creat();
+	int size = tree->getDeath();
+	cout<<size<<endl;
+	if(size==0){
+		break;
+	}
+	}
+	delete tree;
+}
+//测试用例(No)   	A B # # C D # E # F # # G H # I K # # # # 
+//测试用例(Yes)   	A B # # C # #
+void test_3(){//判断一颗二叉树是否是完全二叉树 测试 
+	BiTree<char> *tree = new BiTree<char>('#');
+	tree->creat();
+	if(tree->isComBiTree()){
+		cout<<"Yes"<<endl;
+	}else{
+		cout<<"No"<<endl;
+	}
+	delete tree;
+}
+//测试用例(A)   	A B # # C D # E # F # # G H # I K # # # # 
+void test_4(){//查找一个结点的双亲结点 测试 
+	BiTree<char> *tree = new BiTree<char>('#');
+	tree->creat();
+	cout<<tree->findParent(tree->getRoot()->lChild)->data;
+	delete tree;
+}
+/*测试用例 A B # # C D # E # F # # G H # I K # # # #
+1 B 1
+0 A 0
+1 D 0
+1 E 0
+1 F 1
+0 C 0
+1 H 0
+1 K 1
+0 I 1
+0 G 1
+*/
+void test_5(){//建立线索二叉树并输出 
+	BiTree<char> *tree = new BiTree<char>('#');
+	tree->creat();
+	tree->inThrBiTree();
+	tree->InThrOrder();
+	delete tree;
+}
+int main(){
+	try{
+	test_1();
+	//test_2();
+	//test_3();
+	//test_4();
+	//test_5();
+	}catch(char *a){
+		cout<<a<<endl;
+	}
+	return 0;
+}

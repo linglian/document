@@ -1,0 +1,149 @@
+/**
+ *  建立哈夫曼树，并能够对输入的英文字符串进行编码，对编码后字符串进行译码，即电文的编码和译码。
+ *
+ *  Compilation:  javac Huffman.java
+ *  Execution:    java Huffman - < catcher.txt | java Huffman + > catcher2.txt
+ *  Correctness:  diff catcher.txt catcher2.txt
+ *  Dependencies: MinPQ.java (priority queue), BinaryStdIn.java, BinaryStdOut.java
+ *
+ *  @author Lei
+ *  @create 2016/10/26
+ */
+public class Huffman {
+    // number of characters (256)
+    private static final int CHARACTERS = Character.MAX_VALUE;
+    // bits of each character (lg256)
+    private static final int RELEVANT_BITS = 8;
+
+    private static class Node implements Comparable<Node> {
+        private char character;
+        private int  frequency;
+        private Node left;
+        private Node right;
+
+        public Node(char character, int frequency, Node left, Node right) {
+            this.character = character;
+            this.frequency = frequency;
+            this.left      = left;
+            this.right     = right;
+        }
+
+        public boolean isLeaf() { return left == null && right == null; }
+
+        @Override
+        public int compareTo(Node that) {
+            return this.frequency - that.frequency;
+        }
+    }
+
+    private Huffman() { }
+
+    /*
+     * 压缩输入的字符串，输出压缩后的二进制码
+     */
+    public static void compress() {
+        String inputString = BinaryStdIn.readString();
+
+        // get frequencies
+        int[] frequencies = new int[CHARACTERS];
+        int n = inputString.length();
+        for (int i = 0; i < n; i++) frequencies[inputString.charAt(i)]++;
+
+        Node root = buildTrie(frequencies);
+        String[] codes = buildCode(root);
+        writeTrie(root);
+        BinaryStdOut.write(n);
+
+        // write code
+        for (int i = 0; i < n; i++) {
+            String code = codes[inputString.charAt(i)];
+            int codeLength = code.length();
+            for (int j = 0; j < codeLength; j++)
+                BinaryStdOut.write(code.charAt(j) == '1');
+        }
+
+        BinaryStdOut.close();
+    }
+
+    /*
+     * 解压二进制码，输出解压后的字符串
+     */
+    public static void expand() {
+        Node root = readTrie();
+        int n = BinaryStdIn.readInt();
+
+        for (int i = 0; i < n; i++) {
+            Node node = root;
+            while (!node.isLeaf())
+                node = BinaryStdIn.readBoolean() ? node.right : node.left;
+            BinaryStdOut.write(node.character, RELEVANT_BITS);
+        }
+
+        BinaryStdOut.close();
+    }
+
+    // 读入一棵单词查找树，返回根节点
+    private static Node readTrie() {
+        return BinaryStdIn.readBoolean() ?
+                new Node(BinaryStdIn.readChar(RELEVANT_BITS), 0, null, null) :
+                new Node('\0', 0, readTrie(), readTrie());
+    }
+
+    // 根据传入的根节点，输出一棵单词查找树
+    private static void writeTrie(Node node) {
+        if (node.isLeaf()) {
+            BinaryStdOut.write(true);
+            BinaryStdOut.write(node.character, RELEVANT_BITS);
+            return;
+        }
+        BinaryStdOut.write(false);
+        writeTrie(node.left);
+        writeTrie(node.right);
+    }
+
+    // 根据存放各字符频率的整型数组，构建一棵单词查找树
+    private static Node buildTrie(int[] frequencies) {
+        MinPQ<Node> pq = new MinPQ<>();
+        int n = frequencies.length;
+
+        for (char i = 0; i < n; i++) {
+            int frequency = frequencies[i];
+            if (frequency > 0) pq.insert(new Node(i, frequency, null, null));
+        }
+
+        while (pq.size() > 1) {
+            Node min1 = pq.delMin();
+            Node min2 = pq.delMin();
+            pq.insert(new Node('\0', min1.frequency + min2.frequency, min1, min2));
+        }
+
+        return pq.min();
+    }
+
+    // 构造单词查找树的编码
+    private static String[] buildCode(Node root) {
+        String[] codes = new String[CHARACTERS];
+        buildCode(codes, "", root);
+        return codes;
+    }
+
+    private static void buildCode(String[] codes, String code, Node node) {
+        if (node.isLeaf()) {
+            codes[node.character] = code;
+            return;
+        }
+        buildCode(codes, code + '0', node.left);
+        buildCode(codes, code + '1', node.right);
+    }
+
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            StdOut.println("Usage: java RunLength -\n"
+                         + "       java RunLength +");
+            return;
+        }
+
+        if (args[0].equals("-")) compress();
+        if (args[0].equals("+")) expand();
+    }
+}

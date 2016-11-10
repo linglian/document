@@ -1,0 +1,236 @@
+/*哈夫曼树，进行简单的编码和编译
+先输入一段英文，对其进行编码，并给出编码后的代码
+再用给出的代码，对其进行编译 
+*/ 
+#include<iostream>
+#include<cstring>
+
+using namespace std;
+
+class EleMent{//统计权值和数据 
+public:
+	char data;
+	int weight;
+	EleMent(){
+		this->weight = 0;
+		this->data = 0;
+	} 
+};
+class EleMentNode{//结点 
+public:
+	char data;
+	int weight;
+	int lChild,rChild,parent;
+	EleMentNode(){
+		this->weight = -1;
+		lChild = -1;
+		rChild = -1;
+		parent = -1;
+	}
+};
+class EleMentTree{//哈夫曼树 
+public:
+	EleMentNode *huffTree;
+	EleMentTree(){
+		str = NULL;
+	}
+	void HuffmanTree(EleMent w[],int n){//生成哈夫曼树 
+		this->size = n;
+		this->nowSize = n;
+		huffTree = new EleMentNode[size*2];
+		for(int i=0;i<n;i++){
+			huffTree[i].data = w[i].data;
+			huffTree[i].weight = w[i].weight;
+		}
+		int i1;
+		int i2;
+		for(int k=n;k<2*n-1;k++){
+			i1 = 0;
+			i2 = 1;
+			select(i1,i2);
+			huffTree[i1].parent = k;
+			huffTree[i2].parent = k;
+			huffTree[k].weight = huffTree[i1].weight+huffTree[i2].weight;		
+			huffTree[k].lChild = i1;
+			huffTree[k].rChild = i2;
+			nowSize++;
+		}
+		root = 2*n-2;
+	}
+	char* getHufCha(char *str){//获得该字符编码 
+		tempStr[0] = '\0';
+		int weight[128] = {0};
+		int length = strlen(str);
+		for(int i=0;i<length;i++){
+			if(str[i]>=0)
+				weight[str[i]]++;
+		}
+		EleMent ele[128];
+		int size =0;
+		for(int i=0;i<128;i++){
+			if(weight[i]!=0){
+				ele[size].data = i;
+				ele[size].weight = weight[i];
+				size++;
+			}
+		}
+		HuffmanTree(ele,size);
+		char *tempStr = new char[size*size/2];
+		int n = 0;
+		while(str[n]!='\0'){
+			strcat(tempStr,getCharPath(str[n++]));
+		}
+		return tempStr;
+	}
+	char* getCharPath(char c){//获得该数据的路径- 编码 
+		char *tempStr = NULL;
+		tempStr = getChPath(c,root);
+		return tempStr;
+	}
+	char* getHufTra(char *huf){//翻译 
+		char *a = "该树还不是哈夫曼树" ;
+		if(nowSize==-1){
+			throw a;
+		}
+		char *tempStr = new char[strlen(huf)];
+		tempStr[0] = '\0';
+		int length = 0;
+		int n = 0;
+		int nowNode = root;
+		while(huf[n]!='\0'){
+			switch(huf[n++]){
+				case '0':
+					nowNode = huffTree[nowNode].lChild;
+					break; 
+				case '1':
+					nowNode = huffTree[nowNode].rChild;
+					break; 
+			}
+			if(huffTree[nowNode].rChild==-1&&huffTree[nowNode].lChild==-1){
+				tempStr[length++] = huffTree[nowNode].data;
+				tempStr[length] = '\0';
+				nowNode = root;
+			}
+		}
+		return tempStr;
+	}
+	char* printHuf(){//输出哈夫曼树的结构和叶子对应的数据 
+		char *a = "该树还不是哈夫曼树" ;
+		if(nowSize==-1){
+			throw a;
+		}
+		if(str!=NULL){
+			delete str;
+		}
+		str = new char[size*size/2];
+		str[0] = '\0';
+		printHuf(root);
+		return str;
+	}
+	~EleMentTree(){
+		if(this->str!=NULL){
+			delete str;
+		}
+		if(this->huffTree!=NULL){
+			delete huffTree;
+		}
+	}
+private:
+	char *str; 
+	int root;
+	int size;
+	int nowSize;
+	
+	void select(int &i1,int &i2){//查找2个权值最小的 
+		for(int i=0;i<nowSize;i++){
+			if(huffTree[i].parent!=-1){
+				continue;
+			}
+			if(huffTree[i1].parent!=-1){
+				i1 = i;
+			}else if(huffTree[i2].parent!=-1){
+				i2 = i;
+			}else if(i2!=i&&huffTree[i1].weight>huffTree[i].weight){
+				i1 = i;
+			}else if(i1!=i&&huffTree[i2].weight>huffTree[i].weight){
+				i2 = i;
+			}
+		}
+	}
+	
+	
+	char* getChPath(char c,int k){ 
+		char *a = NULL;
+		if(huffTree[k].lChild!=-1){
+			a = getChPath(c,huffTree[k].lChild);
+			if(a!=NULL){
+				return a;
+			}
+		}
+		if(huffTree[k].rChild!=-1){
+			a = getChPath(c,huffTree[k].rChild);
+			if(a!=NULL){
+				return a;
+			}
+		}
+		if(huffTree[k].lChild==-1&&huffTree[k].rChild==-1&&huffTree[k].data==c){
+			a = printPath(k);
+			return a;
+		}
+		return a;
+	}
+	
+	void printHuf(int k){
+		if(huffTree[k].lChild!=-1){
+			printHuf(huffTree[k].lChild);
+		}
+		if(huffTree[k].rChild!=-1){
+			printHuf(huffTree[k].rChild);
+		}
+		if(huffTree[k].lChild==-1&&huffTree[k].rChild==-1){
+			char* tempStr = printPath(k);
+			strcat(str,tempStr);
+			int l = strlen(str);
+			str[l]=' ';
+			str[l+1]=huffTree[k].data;
+			str[l+2]='\n';
+			str[l+3]='\0';
+		}
+	}
+	char* printPath(int k){//返回该叶子的路径 
+		char *path;
+		path = new char[size+1];
+		int n = 0;
+		int lastNode = -1;
+		while(huffTree[k].parent!=-1){
+			lastNode = k;
+			k = huffTree[k].parent;
+			if(huffTree[k].lChild==lastNode){
+				path[n++] = 0+'0';
+			}else if(huffTree[k].rChild==lastNode){
+				path[n++] = 1+'0';
+			}
+		}
+		path[n] = '\0';
+		strrev(path);
+		return path;
+	}
+};
+void test(){
+	char str[1000];
+	EleMentTree *tree = new EleMentTree();
+	cout<<"请输入要编码的内容"<<endl;
+	cin>>str;
+	cout<<"编码结果如下"<<endl;
+	cout<<tree->getHufCha(str)<<endl;
+	cout<<"编码后各个字符的编码如下"<<endl;
+	cout<<tree->printHuf()<<endl;
+	cout<<"请输入要编译的内容"<<endl; 
+	cin>>str;
+	cout<<"编译结果如下"<<endl;
+	cout<<tree->getHufTra(str)<<endl;
+}
+int main(){
+	test();
+	return 0;
+} 

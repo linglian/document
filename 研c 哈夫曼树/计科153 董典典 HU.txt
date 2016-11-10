@@ -1,0 +1,228 @@
+/*代码写的有点繁琐，结构体类型的tree有字符，权值，双亲，左孩子，右孩子；huffmantree数组用来建立Huffman树
+结构体类型code，有字符，字符对应的编码，编码的长度，这棵树严格的按照左孩子的权值小于右孩子的权值，
+在找当前没使用的节点的两个最小权值的下标i1,i2，第一次时使用排序找的，但是发现这样做会改变父亲节点
+和孩子节点，所以用一个二维数组，b[0][0]来存储当前节点的权值，b[0][1]用来存储当前节点的下标，huffman
+树中输入的节点都是叶子节点且最后共有这些节点的2 * n - 1 个，
+输入样例，请输入叶子节点个数：5;请输入叶子节点：a 35 b 25 c 15 d 15 e 10;
+请输入字符串：aced(1110110000)
+请输入编码串：110110000(abec)(对输入的字符串和编码串没有容错处理)*/
+#include<iostream>
+#include<string>
+using namespace std;
+
+struct tree
+{
+	char a;
+	int weight,parent,lchild,rchild;
+};
+
+struct code
+{
+	char a;
+	int coder[100];
+	int num;
+};
+
+class huffmancode
+{
+private:
+	tree huffmantree[100],b[100];
+	code treecoder[100];
+	int n;//叶子节点个数
+public:
+	void inithuffmantree()//初始化huffmantree
+	{
+		cout << "请输入叶子节点个数：";
+		cin >> n;
+		for(int i = 0;i < 2 * n;i++)
+		{
+			huffmantree[i].parent = -1;
+			huffmantree[i].lchild = -1;
+			huffmantree[i].rchild = -1;
+		}
+		cout << "请输入叶子节点及其权值：";
+		for(i = 0;i < n;i++)
+		{
+			cin >> huffmantree[i].a;
+			cin >> huffmantree[i].weight;
+		}
+	}
+
+
+	void structuretree()//建立huffmantree
+	{
+		int i1,i2;
+		int m = 0;
+		int b[1][2];
+		for(int k = n;k < 2 * n - 1;k++)
+		{
+			for(int i = 0;i < k;i++)
+			{
+				if(huffmantree[i].parent == -1)
+				{
+					b[0][0] = huffmantree[i].weight;
+					b[0][1] = i;
+					break;
+				}
+			}
+			for(int j = 0;j < k;j++)
+			{
+				if(huffmantree[j].weight < b[0][0] && huffmantree[j].parent == -1)
+				{
+					b[0][0] = huffmantree[j].weight;
+					b[0][1] = j;
+				}
+			}
+			huffmantree[b[0][1]].parent = 0;//将此时的最小权值节点标记
+			i1 = b[0][1];
+			for(i = 0;i < k;i++)
+			{
+				if(huffmantree[i].parent == -1)
+				{
+					b[0][0] = huffmantree[i].weight;
+					b[0][1] = i;
+					break;
+				}
+			}
+			for(j = 0;j < k;j++)
+			{
+				if(huffmantree[j].weight < b[0][0] && huffmantree[j].parent == -1)
+				{
+					b[0][0] = huffmantree[j].weight;
+					b[0][1] = j;
+				}
+			}
+			i2 = b[0][1];//以上是找i1和i2;
+			huffmantree[i1].parent = k;
+			huffmantree[i2].parent = k;
+			huffmantree[k].weight = huffmantree[i1].weight + huffmantree[i2].weight;
+			huffmantree[k].lchild = i1;
+			huffmantree[k].rchild = i2;
+			huffmantree[k].a = -1;//将后来出现的节点的字符赋值为-1
+		}
+	}
+
+	void coder()//对字符编码
+	{
+		int j = 0,m;
+		for(int i = 0;i < n;i++)
+		{
+				treecoder[i].a = huffmantree[i].a;
+		} //将字符赋值到编码结构体的字符中
+		for(i = 0;i < n;i++)	
+		{
+			int j = i;
+			int k = 0;
+			while(huffmantree[j].parent != -1)//从叶子节点找自己是左节点还是右节点，此时的编码是倒序的
+			{
+				m = huffmantree[j].parent;
+				if(huffmantree[m].lchild == j)
+				{
+					treecoder[i].coder[k] = 0;
+					j  = m;
+					k++;
+				}
+				if(huffmantree[m].rchild == j)
+				{
+					treecoder[i].coder[k] = 1;
+					j  = m;
+					k++;
+				}
+				
+			}
+			treecoder[i].num = k;
+			int b;
+	        for(int p = 0;p <  treecoder[i].num / 2;p++)//将倒序的编码逆置
+			{
+				b = treecoder[i].coder[p];
+				treecoder[i].coder[p] =  treecoder[i].coder[treecoder[i].num - p - 1];
+				treecoder[i].coder[treecoder[i].num - p - 1] = b;
+			}
+		}
+	}
+
+
+	void printcoder()//打印出每个字符对应的编码
+	{
+		cout << endl << "字符的编码为：" << endl;
+		for(int i = 0;i < n;i++)
+		{
+			cout << treecoder[i].a << " ";
+			for(int j = 0;j < treecoder[i].num;j++)
+				cout << treecoder[i].coder[j];
+			cout << endl;
+		}
+	}
+
+
+	void stringcoder()//输入字符得到编码
+	{
+		string s;
+		cout << endl << "请输入要编码的字符串：";
+		cin >> s;
+		int num = s.size();
+		cout << "字符串的编码为：";
+		for(int i = 0;i < num;i++)
+		{
+			for(int j = 0;j < n;j++)
+			{
+				if(s[i] == treecoder[j].a)
+				{
+					for(int k = 0;k < treecoder[j].num;k++)
+						cout << treecoder[j].coder[k];
+					break;
+				}
+			}
+		}
+		cout << endl;
+	}
+
+
+	void decoder()//根据编码串得到字符串
+	{
+		int a[100],number,i;
+		string s;
+		cout << endl << "请输入编码串：";
+		cin >> s;
+		number = s.size();//string类型的s保存字符串
+		for(i = 0;i < number;i++)//将字符串按次序赋给int型的数组a
+		{
+			a[i] = s[i] - 48;
+		}
+		i = 0;
+		cout << "解译编码串为：";
+		while(i < number)
+		{
+			int j = 2 * n - 2;//每一次比较都是从根节点开始			
+			while(huffmantree[j].lchild != -1)
+			{
+				if(a[i] == 0)
+				{
+					j = huffmantree[j].lchild;
+					i++;
+				}
+				else if(a[i] == 1)
+				{
+					j = huffmantree[j].rchild;
+					i++;
+				}
+			}
+			cout << huffmantree[j].a;
+		}
+		cout << endl;
+
+	}
+
+};
+
+int main()
+{
+	huffmancode o;
+	o.inithuffmantree();
+	o.structuretree();
+	o.coder();
+	o.printcoder();
+	o.stringcoder();
+	o.decoder();
+	return 0;
+}

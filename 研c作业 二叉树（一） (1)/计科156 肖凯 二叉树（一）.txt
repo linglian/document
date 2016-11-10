@@ -1,0 +1,53 @@
+#include<iostream>
+int count = 0;//叶子结点初始化
+using namespace std;
+typedef struct BiNode{//二叉树结构体
+	char data;//结点的值
+	BiNode *lchild, *rchild;//左子树，右子树
+}*BiTree;
+void CreatBiTree(BiTree &T)//中序遍历创建二叉树
+{
+	char ch;
+	cin >> ch;
+	if (ch != '#'){//非空
+		T = new BiNode;
+		T->data = ch;
+		CreatBiTree(T->lchild);
+		CreatBiTree(T->rchild);
+	}
+	else T = NULL;
+}
+int CountLeaf(BiTree T)
+{
+	if (T){//树非空
+		if (T->lchild == NULL&&T->rchild == NULL)
+			::count++;
+		else {
+			CountLeaf(T->lchild);//递归统计左子树叶子节点数
+			CountLeaf(T->rchild);//递归统计右子树叶子节点数
+		}
+	}
+	return ::count;
+}
+int depth(BiTree T)//求二叉树深度
+{
+	int deep = 0;//初始化深度为0
+	if (T)//树非空
+	{
+		int lchilddeep = depth(T->lchild);//左子树深度
+		int rchilddeep = depth(T->rchild);//右子树深度
+		deep = lchilddeep >= rchilddeep ? lchilddeep + 1 : rchilddeep + 1;//左右子树深度中较大值+1即为二叉树的深度
+	}
+	return deep;
+}
+int main()
+{
+	int Node_Num;
+	BiTree N;
+	cout << "input inorder traverse binary tree:('#'means NULL):";
+	CreatBiTree(N);
+	Node_Num = CountLeaf(N);
+	cout << "leaf node number is:" << Node_Num << endl;
+	cout << "node depth is:" << depth(N) << endl;
+	return 0;
+}

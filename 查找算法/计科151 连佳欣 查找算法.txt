@@ -1,0 +1,327 @@
+#include<iostream>
+const int MaxSize=100;
+using namespace std;
+class  Index       //索引类 
+{
+	public:
+		int key;
+		int start;
+		int end;
+};
+class SeqSearch
+{
+	private:
+		int array[MaxSize];
+		int num;     //元素个数 
+		int low,high;
+		Index index[MaxSize];     //索引数组 
+		public:
+			SeqSearch(){
+			}
+			SeqSearch(int a[],int n);
+			int SeqSearchlist(int k);    //顺序查找
+			int BinarySearch1(int k);    //二分法查找 (非递归）
+			int BinarySearch2(int k,int n,int m);    //二分法查找（递归) 
+			void Divide(int m,int a[]);   //分块
+			int Search(int key,int a[]);   //分块查找 
+			 
+			
+};
+
+class BiNode       //二叉树结点类 
+{
+	public:
+		int data;
+		BiNode *lchild,*rchild,*parent;
+};
+class BiSortTree    //二叉排序树类 
+{
+	private:
+		BiNode *root;
+		BiNode *b1;
+		public:
+			BiSortTree(int a[],int n);
+			~BiSortTree(){
+			}
+			void InsertBST(BiNode* &bt,BiNode * &s);     //二叉排序树插入 
+			void DeleteBST(BiNode * &p,BiNode * &f);        //二叉排序树删除最小值结点 
+			BiNode* SearchBST(BiNode * &root,int k);     //二叉排序树查找 调用函数 
+			void DeleteBST(BiNode * &root,int k);       //二叉排序树删除一般结点的调用函数 
+			void DeleteBST(int k);                          //二叉排序树删除函数 
+			int  SearchBST(int k);                     //二叉排序树查找函数
+			void PreOrder();                           //前序遍历 
+			void PreOrder(BiNode *bt);                 //前序遍历调用函数 
+};
+void SeqSearch::Divide(int m,int a[])        //分块
+{
+	int i,j=-1;
+	for(i=0;i<m/5;i++)
+	{
+		index[i].start=j+1;
+		j=j+1;
+		index[i].end=j+4;
+		if(index[i].end>m-1)
+		{
+			index[i].end=m-1;
+			index[i].key=a[m-1];
+			break;
+		}
+		j=j+4;
+		index[i].key=a[j];
+	}
+}
+int SeqSearch::Search(int key,int a[])   //分块查找 
+{
+	int i,j;
+	i=0;
+	while(i<3&&key>index[i].key)
+	{
+		i++;
+	}
+	if(i>=3)
+	{
+		return 0;
+	}
+	j=index[i].start;
+	while(j<=index[i].end&&a[j]!=key)
+	{
+		j++;
+	}
+	if(j>index[i].end)
+	{
+		return 0;
+	}
+	else return j;
+}
+SeqSearch::SeqSearch(int a[],int n)
+{
+	int i;
+	num=n;
+	int j=1;
+	for(i=0;i<num;i++)
+	{
+		array[j]=a[i];
+		j++;
+	}
+}
+int SeqSearch::SeqSearchlist(int k)  //顺序查找
+{
+	array[0]=k;
+	int i;
+	i=num;
+	while(array[i]!=k)
+	{
+		i--;
+	}
+	return i;
+	
+}
+int SeqSearch::BinarySearch1(int k)    //二分法查找 (非递归）
+{
+	low=1;
+	high=num;
+	int mid;
+	while(low<=high)
+	{
+		mid=(low+high)/2;
+		if(array[mid]<k)  low=mid+1;
+		else if(array[mid]>k)  high=mid-1;
+		else  return mid;
+	}
+	return 0;
+}
+int SeqSearch::BinarySearch2(int k,int n,int m)   //二分法查找（递归)
+{
+	low=n;
+	high=m;
+	int mid;
+	if(low>high)  return 0;
+	else
+	{
+		mid=(low+high)/2;
+		if(k<array[mid])  return  BinarySearch2(k,low,mid-1);
+		else if(k>array[mid])  return BinarySearch2(k,mid+1,high);
+		else return mid;
+	}
+		
+}
+void BiSortTree::PreOrder(BiNode *bt)   //前序遍历调用函数 
+{
+	if(bt==NULL)  return;
+	else
+	{
+	cout<<bt->data<<" ";
+	PreOrder(bt->lchild);
+	PreOrder(bt->rchild);
+}
+}
+void BiSortTree::PreOrder()
+{
+	PreOrder(root);
+}
+void BiSortTree::InsertBST(BiNode * &bt,BiNode * &s)  //二叉排序树插入
+{
+
+	if(bt==NULL)
+	{
+		bt=s;
+		s->parent=b1;
+		
+	}
+	else if(s->data<bt->data) 
+	{
+	  b1=bt;
+      InsertBST(bt->lchild,s);
+  }
+	else
+	{
+	  b1=bt;
+	  InsertBST(bt->rchild,s);
+}
+}
+BiSortTree::BiSortTree(int a[],int n)
+{
+	int i;
+	b1=NULL;
+	root=NULL;
+	for(i=0;i<n;i++)
+	{
+		BiNode *s=new BiNode;
+		s->data=a[i];
+		s->lchild=s->rchild=NULL;
+		InsertBST(root,s);
+	}
+}
+void BiSortTree::DeleteBST(BiNode * &p,BiNode * &f)  //二叉排序树删除最小值结点
+{
+	if(p->lchild==NULL&&p->rchild==NULL&&f->lchild==p)
+	{
+		f->lchild=NULL;
+		delete p;
+	}
+	else if(p->lchild==NULL&&p->rchild==NULL&&f->rchild==p)
+	{
+		f->rchild=NULL;
+		delete p;
+	}
+	
+	else if(p->lchild==NULL&&f->lchild==p)
+	{
+		f->lchild=p->rchild;
+		delete p;
+	}
+	else if(p->lchild==NULL&&f->rchild==p)
+	{
+		f->rchild=p->rchild;
+		delete p;
+	}
+	else if(p->rchild==NULL&&f->lchild==p)
+	{
+		f->lchild=p->lchild;
+		delete p;
+	}
+	else if(p->rchild==NULL&&f->rchild==p)
+	{
+		f->rchild=p->lchild;
+		delete p;
+	}
+	else
+	{
+		BiNode *par,*s;
+		par=p;
+		s=p->rchild;
+		while(s->lchild!=NULL)
+		{
+			par=s;
+			s=s->lchild;
+			
+		}
+		p->data=s->data;
+		if(par==p)  par->rchild=s->rchild;
+		else  par->lchild=s->rchild;
+		delete s;
+	}
+}
+void BiSortTree::DeleteBST(int k)   //二叉排序树删除函数 
+{
+	DeleteBST(root,k);
+}
+void BiSortTree::DeleteBST(BiNode * &root,int k)   //二叉排序树删除一般结点的调用函数 
+{
+	BiNode *b,*p;
+	p=root;
+	b=SearchBST(p,k);
+	DeleteBST(b,b->parent);
+
+	
+}
+int  BiSortTree::SearchBST(int k)  //二叉排序树查找函数
+{
+	BiNode *m;
+	m=SearchBST(root,k);
+	if(m==NULL)
+	{
+		return 0;
+	}
+	else return m->data;
+}
+BiNode* BiSortTree::SearchBST(BiNode * &root,int k)
+{
+	if(root==NULL)  
+	return  NULL;
+	else if(root->data==k)  return root;
+	else if(root->data<k)  return SearchBST(root->rchild,k);
+	else  return SearchBST(root->lchild,k);
+	
+}
+
+int main()
+{
+	int a[100],i,n,k;
+	cout<<"输入数组的长度，待查数:"<<endl;
+	cin>>n>>k;
+	cout<<"输入一组有序的整型数:"<<endl;
+	for(i=0;i<n;i++)
+	{
+		cin>>a[i];
+	}
+	SeqSearch s(a,n);
+	cout<<"顺序查找结果为:"<<endl;
+	cout<<s.SeqSearchlist(k)<<endl;
+	cout<<"二分法查找结果为:"<<endl;
+	cout<<s.BinarySearch1(k)<<endl;
+	BiSortTree b(a,n);
+	cout<<"前序遍历为:"<<endl;
+	b.PreOrder();
+	cout<<endl;
+	b.DeleteBST(k);
+	cout<<"删除后的数组为:"<<endl;
+	b.PreOrder();
+	cout<<endl;
+	cout<<"输入待查数:"<<endl;
+	cin>>k;
+	cout<<"二叉排序树查找该数的结果为:"<<endl;
+	int m=b.SearchBST(k);
+	if(m==0)
+	{
+		cout<<"查无此数!"<<endl;
+	}
+	else cout<<m<<endl;
+	SeqSearch ss;
+	ss.Divide(n,a);
+	cout<<"输入待查数:"<<endl;
+	cin>>k;
+	int z=ss.Search(k,a);
+	cout<<"分块法查找该数的结果为(无哨兵):"<<endl;
+	if(z==0)
+	{
+		cout<<"查无此数!"<<endl;
+	}
+	else cout<<z<<endl;
+	
+	
+	return 0;
+}
+
+
+

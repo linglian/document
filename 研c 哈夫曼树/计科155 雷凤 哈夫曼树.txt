@@ -1,0 +1,196 @@
+#include<iostream>
+#include<string>
+#include<stack>
+#include<fstream>
+using namespace std;
+
+int weight(char a[], char b);
+
+ struct HuffmanNode
+{
+	int weight;
+	char data;
+	int lchild,rchild,parent;
+};
+class HuffmanTree
+{
+public:
+	HuffmanTree(){}
+	~HuffmanTree(){}
+	void Select(int &i1,int &i2);//选取最小权与次小权
+	void huffmantree(HuffmanNode huffTree[]);//构建哈夫曼树初始化
+	string CreatHuffmanCode(int i);//译码
+	string ReTurnCode(string str);//反编译
+	string CreatCode(string str);//编码
+	void print();                 //输出
+private:
+     HuffmanNode huffTree[100];
+	 int n;							//叶子结点数
+};
+
+void HuffmanTree::Select(int &i1,int &i2)
+{
+	int j,small,Csmall;
+    while (huffTree[i1].parent != -1)
+		i1++;
+	 small = huffTree[i1].weight;
+	   i2 = i1 + 1;
+	while (huffTree[i2].parent != -1)
+		i2++;
+	 Csmall = huffTree[i2].weight;
+	if (i2 < i1)//初步判断
+	{
+		int temp = i2;
+		i2 = i1;
+		i1 = temp;
+	} 
+		for(j =0;j<2 * n - 1;j++)
+		{
+			if(huffTree[j].parent == -1)
+			{
+				if(huffTree[j].weight < small)
+				{
+					Csmall = small;
+					small = huffTree[j].weight;
+					i2 = i1;
+					i1 = j;
+				}
+				else if((huffTree[j].weight >=small ) && (huffTree[j].weight < Csmall))
+				{
+					Csmall = huffTree[j].weight;
+					i2 = j;
+				}
+			}
+		}
+}
+void HuffmanTree::huffmantree(HuffmanNode huffTree[])
+{
+	int i= 0,k;
+	while(huffTree[i].parent == -1)
+		i++;
+	n = i;
+	for(i = 0; i < n; i++)
+	{
+		this->huffTree[i].lchild = huffTree[i].lchild;
+		this->huffTree[i].rchild = huffTree[i].rchild;
+		this->huffTree[i].parent = huffTree[i].parent;
+		this->huffTree[i].weight = huffTree[i].weight;
+		this->huffTree[i].data = huffTree[i].data;
+	}
+	for(k =n;k<2*n-1;k++) //n-1次合并树
+	 {
+		int i1 = 0, i2 = 0;
+         Select(i1,i2);
+		 this->huffTree[i1].parent = k;//this指向类体本身
+		 this->huffTree[i2].parent = k;
+		 this->huffTree[k].weight = this->huffTree[i1].weight+this->huffTree[i2].weight;
+		 this->huffTree[k].lchild =i1;
+		 this->huffTree[k].rchild =i2;
+		 this->huffTree[k].parent = -1;
+	 }
+	
+}
+void HuffmanTree::print()
+{
+
+	cout<<"编号"<<"\t"<<"元素"<<" \t"<<"频率"<<" \t"<<"双亲"<<"\t"<<"左孩子"<<"\t"<<"右孩子"<<"\t"<<endl;
+	for(int i =0;i<2*n-1;i++)
+	{
+		cout<<i<<" \t"<<huffTree[i].data<<" \t"<<huffTree[i].weight<<" \t"<<huffTree[i].parent<<"\t"<<
+			huffTree[i].lchild<<"\t"<<huffTree[i].rchild<<"\t"<<endl;
+	}
+}
+string HuffmanTree::CreatHuffmanCode(int i)
+{
+	string ss;
+	stack<char> stack;
+	int parent =huffTree[i].parent;
+		while(parent !=-1)
+		{
+			if(huffTree[parent].lchild==i)
+				 stack.push('0');
+	    	else if(huffTree[parent].rchild ==i)
+				stack.push('1');
+			i = parent;
+			parent =huffTree[parent].parent;
+		}
+		while(!stack.empty())
+		{
+			ss+=stack.top();
+			stack.pop();
+		}
+	return ss;
+}
+string HuffmanTree::CreatCode(string str)
+{
+	string ss; 
+   for(int i = 0;i< str.size();i++)
+   {
+	   int j = 0;
+	   while(str.at(i) != huffTree[j].data )
+	      j++;
+        ss += CreatHuffmanCode(j);
+   }
+   return ss;
+}
+string HuffmanTree::ReTurnCode(string str) 
+{
+	string ss;
+    int i=0; int parent = 2*n-2; int j = parent;
+	while(i < str.size())
+	{
+		while(huffTree[j].lchild != -1 && huffTree[j].rchild != -1)
+		{	
+				if(str.at(i) =='0')
+				   j =huffTree[j].lchild;
+	    		if(str.at(i) == '1')
+		 		   j =huffTree[j].rchild;
+				i++;
+		}
+		ss += huffTree[j].data;
+		j = parent;
+	}
+	return ss;
+}
+
+void CreatHuffmanNode(char data[],HuffmanNode *huffnode)
+{
+	int n=0,i =0;
+	int f[256] = {0};
+	while(data[i] != '\0')
+	{
+		f[data[i]]++;
+		i++;
+	}
+	i = 0;
+	for(int j = 0; j < 256; j++)
+	{
+		if(f[j] != 0)
+		{
+			huffnode[i].data = j;
+			huffnode[i].weight = f[j];
+			huffnode[i].lchild = -1;
+			huffnode[i].rchild = -1;
+			huffnode[i].parent = -1;
+			i++;
+		}
+	}
+}
+
+int main()
+{
+	HuffmanNode huff[100];
+	CreatHuffmanNode("aabc",huff);
+    HuffmanTree tree;
+	tree.huffmantree(huff);
+	tree.print(); cout<<endl;
+	cout<<"字符的编码为:"<<endl;
+	string str;
+    str =tree.CreatCode("aabc");
+	cout<<str<<endl;
+	cout<<"译码后原字符:"<<endl;
+	string Array;
+	Array = tree.ReTurnCode(str);//把ASII放回译码
+	cout<<Array;  cout<<endl;
+	return 0;
+}

@@ -1,0 +1,268 @@
+/*这个程序包含有求一棵树的叶子节点的个数，树的深度，判断是否是完全二叉树，查找某个节点的双亲节点，
+看到找数的深度首先想到了层序遍历，用node*型的数组a来储存遍历的节点，用整型数组b来储存与a储存的对应
+的节点的层数，用整型数组c来储存每一层的节点数*/
+
+#include<iostream>
+using namespace std;
+
+int leafnodenum = 0,nodenum = 0;
+
+struct node
+{
+	char data;
+	node *lchild,*rchild;
+};
+	
+class tree
+{
+private:
+	node *a[100];
+	int tail,head,b[100],c[100];
+	
+public:
+	node* creat(node *t)
+	{
+		char c;
+		cin >> c;
+		t = new node;
+		if(c == '#')
+			t = NULL;
+		else
+		{
+			t->data = c;
+			t->lchild = creat(t->lchild);
+			t->rchild = creat(t->rchild); 
+		}
+		return t;
+	}
+	
+	void print(node *t)
+	{
+		if(t == NULL)
+			return ;
+		cout << t->data << endl;
+		print(t->lchild);
+		print(t->rchild);
+		
+	}
+
+	void leafnode(node *t)//先序遍历判断是否是叶子节点
+	{
+		if(t == NULL)
+			return ;
+		if(t->lchild == NULL && t->rchild == NULL)
+			leafnodenum++;
+		leafnode(t->lchild);
+		leafnode(t->rchild);
+	}
+	
+	void leverorder(node *t)//层序遍历
+	{
+		head = 0;
+		tail = 0;
+		if(t == NULL)
+		{
+			return;
+		}
+		else
+		{
+			a[head] = t;
+			b[head] = 1;
+			tail++;
+			while(head < tail)
+			{
+				if(a[head]->lchild != NULL)
+				{
+					a[tail] = a[head]->lchild;
+					b[tail] = b[head] + 1;
+					tail++;
+				}
+				if(a[head]->rchild != NULL)
+				{
+					a[tail] = a[head]->rchild;
+					b[tail] = b[head] + 1;
+					tail++;
+				}
+				head++;
+			}
+			nodenum = tail;	
+		}
+	}
+
+
+	void deepth(node *t)//树的深度
+	{
+		leverorder(t);
+		cout << "这棵树的深度为  " << b[nodenum - 1] << endl;
+	}
+	
+	void isfulltree(node *t)//判断是否是完全二叉树
+	{
+		leverorder(t);
+		int i = 0,j = 0;
+		while(b[i] < b[nodenum - 1])
+		{
+			c[j] = 1;
+			while(a[i] == a[i + 1])
+			{
+				c[j]++;
+				i++;
+			}
+			if(j > 0)//判断这棵树倒数第二层之前是否是完全二叉树
+			{
+				if(c[j] != 2 *c[j - 1])
+				{
+					cout << "这棵树不是完全二叉树" << endl;
+					return;
+				}
+			}
+			i++;
+			j++;
+		}
+		int num1 = i - c[j - 1];//倒数第二层开始
+		while(b[num1] == b[nodenum - 1])//判断倒数第二层的节点，不是就结束判断
+		{
+			if(a[b[num1]]->lchild == NULL && b[++num1] == b[num1])
+			{
+				cout << "这棵树不是完全二叉树" << endl;
+				return;
+			}
+			if(a[b[num1]]->rchild == NULL && b[++num1] == b[num1])
+			{
+				cout << "这棵树不是完全二叉树" << endl;
+				return;
+			}
+		}
+		cout << "这棵树是完全二叉树" << endl;
+	}
+
+	void parentnode(node *t,char d)
+	{
+		
+		if(t == NULL)
+			return ;
+		else
+		{
+			int i = 0;
+			while(i < nodenum)
+			{	
+				if(a[i]->lchild != NULL)//需要先判断这个点的孩子节点是否为空，
+				{
+					if(a[i]->lchild->data == d)//再判断它的孩子节点是否是该节点，找到之后就返回
+					{
+						cout << "该节点的双亲节点为 "<< a[i]->data << endl;
+						return;
+					}
+				}
+				if(a[i]->rchild != NULL)
+				{
+					if(a[i]->rchild->data == d)
+					{
+						cout << "该节点的双亲节点为 " << a[i]->data << endl;
+						return;
+					}
+				}
+				i++;
+			}
+			cout << "没有找到该节点的双亲节点" << endl;
+		}
+	}
+
+};
+
+int main()
+{
+	node *t;
+	char d;
+	t = new node;
+	tree s;
+	cout << "请输入一棵二叉树的先序遍历序列：";
+	t = s.creat(t);
+	s.leafnode(t);
+	cout << "这棵树的叶子节点为 " << leafnodenum << endl;
+	s.deepth(t);
+	s.isfulltree(t);
+	cout << "请输入您要查找其双亲节点的节点" << endl;
+	cin >> d;
+	s.parentnode(t,d);
+	return 0;
+}
+/* 这个程序是建立线索二叉树，并按中序遍历输出，pre前一个节点，当输入为#时没有把这个节点赋空，而是依然赋值为#，在进行判断是否为空节点的时候，判断该节点的data是否是#，因为在进行建立的时候pre为NULL，在进行第一次判断的时候无法判断pre的是否需要建立后继，输出的时候是按照中序遍历输出的，只需要判断该节点的孩子节点所指的节点是否是它的孩子节点*/
+
+#include<iostream>
+using namespace std;
+struct node
+{
+	int lflag,rflag;
+	char data;
+	node *lchild,*rchild;
+};
+
+class tree
+{
+private:
+	node *pre;
+public:
+	node* creat(node *t)
+	{
+		char c;
+		cin >> c;
+		t = new node;
+		t->lflag = 0;
+		t->rflag = 0;
+		t->data = c;
+		if(t->data == '#')
+		;
+		else
+		{
+			t->lchild = creat(t->lchild);
+			t->rchild = creat(t->rchild);
+		}
+		return t;
+	}
+	void thrbitree(node *t,node *pre)
+	{
+		if(t->data == '#')
+			return;
+		thrbitree(t->lchild,pre);
+		if(t->lchild->data == '#')
+		{
+			t->lflag = 1;
+			t->lchild = pre;
+		}
+		if(t->rchild->data == '#')
+		{
+			t->rflag = 1;
+		}
+		if(pre->rflag == 1)
+			pre->rchild = t;
+		pre = t;
+		thrbitree(t->rchild,pre);
+	}
+	void inthrbitree(node *t)
+	{
+		pre = new node;
+		pre->data = '#';
+		pre->lflag = 0;
+		pre->rflag = 0;
+		thrbitree(t,pre);
+	}
+	void print(node *t)
+	{
+		if(t == NULL)
+			return;
+		if(t->lflag == 0) print(t->lchild);
+		cout << t->lflag << " " << t->data << " " << t->rflag << endl;	
+		if(t->rflag == 0) print(t->rchild);
+	}
+};
+
+int main()
+{
+	tree a;
+	node *t;
+	t = a.creat(t);
+	a.inthrbitree(t);
+	a.print(t);
+	return 0;
+}

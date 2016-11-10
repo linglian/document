@@ -1,0 +1,575 @@
+
+
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>这仅仅是个坦克大战</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body onload = "main()">
+        <canvas id="myCanvas" onkeydown="canvasKeyDown()" width="300" height="550" style="border:1px solid #d3d3d3;">
+        </canvas>
+        <script language = "javascript">
+            window.alert("这是坦克大战游戏");
+            //屏幕适配
+            var windowWidth = document.body.scrollWidth * 0.9;
+            var windowHeight = document.body.scrollHeight * 0.9;
+            var wWidth = document.body.scrollWidth * 0.9;
+            var wHeight = document.body.scrollHeight * 0.9;
+            myCanvas.width = windowWidth;
+            myCanvas.height = windowHeight;
+            var maxLang = windowWidth;
+            var tanks;
+            var bullets;
+            //地图大小
+            var mapX = 13;
+            var mapY = 13;
+            var id = -1;
+            var foeId = -1;
+            var isFight = "false";
+            var isLogin = "false";
+            var isLogining = "false";
+            var isWating = "false";
+            var root = new Date().getTime() % 1000;
+            var map;
+            //单位大小
+            var unitX;
+            var unitY;
+            if (windowWidth < windowHeight) {
+                maxLang = windowWidth;
+                unitX = windowWidth / 13;
+                unitY = windowWidth / 13;
+            } else {
+                maxLang = windowHeight;
+                unitX = windowHeight / 13;
+                unitY = windowHeight / 13;
+            }
+            //图片适配
+            var tankImage = new Array(5);
+            for (var i = 0; i < 5; i++) {
+                tankImage[i] = new Image();
+                tankImage[i].src = "image/tank_" + (i + 1) + ".png";
+            }
+            var numImage = new Array(10);
+            for (var i = 0; i < 10; i++) {
+                numImage[i] = new Image();
+                numImage[i].src = "image/" + (i + 1) + ".png";
+            }
+            var wallImage = new Array(2);
+            wallImage[0] = new Array(3);
+            wallImage[1] = new Array(1);
+            for (var i = 0; i < 3; i++) {
+                wallImage[0][i] = new Image();
+                wallImage[0][i].src = "image/wall_" + (i + 1) + ".png";
+            }
+            wallImage[1][0] = new Image();
+            wallImage[1][0].src = "image/grass.jpg";
+            var upImage = new Image();
+            upImage.src = "image/up.png";
+            var downImage = new Image();
+            downImage.src = "image/down.png";
+            var leftImage = new Image();
+            leftImage.src = "image/left.png";
+            var rightImage = new Image();
+            rightImage.src = "image/right.png";
+            var aImage = new Image();
+            aImage.src = "image/A.png";
+            var bImage = new Image();
+            bImage.src = "image/B.png";
+            var bulletImage = new Image();
+            bulletImage.src = "image/bullet.png";
+            var backImage = new Image();
+            backImage.src = "image/beijing.png";
+            var xmlhttp;
+            //子弹信息
+            function Bullet(x, y, speedX, speedY, hurt) {
+                this.x = x;
+                this.y = y;
+                this.speedX = speedX;
+                this.speedY = speedY;
+                this.hurt = hurt;
+                this.able = true;
+            }
+            //墙信息
+            function Wall(id, hp) {
+                this.id = id;
+                this.hp = hp;
+            }
+            //角色信息
+            function Tank(x, y, id, hp) {
+                this.x = x;
+                this.y = y;
+                this.id = id;
+                this.hp = hp;
+                this.face = 0;
+                this.bulletTime = 0;
+                this.bulletMaxTime = 20;
+                this.bullet = 1;
+                this.maxBullet = 3;
+                this.isAlive = "true";
+                this.touchUping = "false";
+                this.touchDowning = "false";
+                this.touchRighting = "false";
+                this.touchLefting = "false";
+                this.touchAing = "false";
+                this.touchBing = "false";
+            }
+            function changeNumber(n) {
+                var m = n % 1.0
+                return n - m;
+            }
+            function letWeb(tank) {
+                if (isLogin == "false") {
+                    g.fillStyle = "green";
+                    g.fillText("正在登陆", windowWidth * 0.1, windowHeight * 0.05);
+                    if (isLogining == "false") {
+                        isLogining = "true";
+                        login();
+                    }
+                } else if (isFight == "false") {
+                    g.fillStyle = "yellow";
+                    g.fillText("正在等待对手", windowWidth * 0.1, windowHeight * 0.05);
+                    waiting();
+                    if (isFight == "true") {
+                        g.fillStyle = "green";
+                        g.fillText("找到对手", windowWidth * 0.1, windowHeight * 0.05);
+                    }
+                } else {
+                    g.fillStyle = "green";
+                    g.fillText("连线中", windowWidth * 0.1, windowHeight * 0.05);
+                    g.fillText("我的id:" + id + "    对方id:" + foeId, windowWidth * 0.1, windowHeight * 0.15);
+                    webTank(tank);
+                }
+            }
+            function waiting() {
+                xmlhttp = new XMLHttpRequest();
+                xmlhttp.open("GET", "http://127.0.0.1:1234?wait:" + id, true);
+                xmlhttp.responseType = "text";
+                xmlhttp.onreadystatechange = stateWaiting;
+                function stateWaiting() {
+                    if (xmlhttp.status == 4) {
+                        if (xmlhttp.statusText == 200) {
+                            if (xmlhttp.responseText.length != 0) {
+                                var str = xmlhttp.responseText.split('|');
+                                if (str[0] == "Yes") {
+                                    foeId = str[1];
+                                    root = str[2];
+                                    isFight = "true";
+                                    isWating = "false";
+                                    init();
+                                } else if (str[0] == "BadWeb") {
+                                    isLogin = "false";
+                                }
+                            }
+                        }
+                    }
+                }
+                xmlhttp.send(null);
+            }
+            function login() {
+                xmlhttp = new XMLHttpRequest();
+                xmlhttp.open("GET", "http://127.0.0.1:1234?login", true);
+                xmlhttp.responseType = "text";
+                xmlhttp.onreadystatechange = stateLogin;
+                function stateLogin() {
+                    if (xmlhttp.status == 4) {
+                        if (xmlhttp.statusText == 200) {
+                            id = xmlhttp.responseText;
+                            isLogin = "true";
+                            isLogining = "false";
+                        }
+                    }
+                }
+                xmlhttp.send(null);
+            }
+            function webTank(tank) {
+                xmlhttp = new XMLHttpRequest();
+                xmlhttp.open("GET", "http://127.0.0.1:1234?tank:" + id + "," + foeId + "," + tank.touchUping + "," + tank.touchDowning + "," + tank.touchRighting + "," + tank.touchLefting + "," + tank.touchAing + "," + tank.touchBing, true);
+                xmlhttp.responseType = "text";
+                xmlhttp.onreadystatechange = stateWeb;
+                function stateWeb() {
+                    if (xmlhttp.status == 4) {
+                        if (xmlhttp.statusText == 200) {
+                            if (xmlhttp.responseText.length != 0) {
+                                var str = xmlhttp.responseText.split('|');
+                                if (str[0] === "GoodWeb") {
+                                    tanks[1].touchUping = str[1];
+                                    tanks[1].touchDowning = str[2];
+                                    tanks[1].touchRighting = str[3];
+                                    tanks[1].touchLefting = str[4];
+                                    tanks[1].touchAing = str[5];
+                                    tanks[1].touchBing = str[6];
+                                    g.fillStyle = "red";
+                                    g.fillText(xmlhttp.responseText, windowWidth * 0.1, windowHeight * 0.25);
+                                    g.fillText(tanks[1].touchUping + "," + tanks[1].touchDowning + "," + tanks[1].touchRighting + "," + tanks[1].touchLefting + "," + tanks[1].touchAing + "," + tanks[1].touchBing, windowWidth * 0.1, windowHeight * 0.35);
+                                    g.fillText(tanks[0].touchUping + "," + tanks[0].touchDowning + "," + tanks[0].touchRighting + "," + tanks[0].touchLefting + "," + tanks[0].touchAing + "," + tanks[0].touchBing, windowWidth * 0.1, windowHeight * 0.45);
+                                } else {
+                                    isFight = "false";
+                                    g.fillStyle = "red";
+                                    g.fillText("网络失败,重新匹配", windowWidth * 0.1, windowHeight * 0.05);
+                                }
+                            }
+                        }
+                    }
+                }
+                xmlhttp.send(null);
+            }
+            function isCanMove(x, y) {
+                var tx = changeNumber(x + 0.05);
+                var ty = changeNumber(y + 0.05);
+                var tx2 = changeNumber(x + 0.95);
+                var ty2 = changeNumber(y + 0.95);
+                var tx3 = changeNumber(x + 0.95);
+                var ty3 = changeNumber(y + 0.05);
+                var tx4 = changeNumber(x + 0.05);
+                var ty4 = changeNumber(y + 0.95);
+                if (tx >= 13 || ty >= 13 || tx2 >= 13 || ty2 >= 13 || tx3 >= 13 || ty3 >= 13 || tx4 >= 13 || ty4 >= 13) {
+                    return false;
+                }
+                if (map[tx][ty].id == 1 && map[tx2][ty2].id == 1 && map[tx3][ty3].id == 1 && map[tx4][ty4].id == 1) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            function up(tank) {
+                tank.face = 0;
+                if (isCanMove(tank.x, tank.y - 0.05)) {
+                    tank.y -= 0.05;
+                }
+                if (tank.y <= 0) {
+                    tank.y = 0;
+                }
+            }
+            function down(tank) {
+                tank.face = 180;
+                if (isCanMove(tank.x, tank.y + 0.05)) {
+                    tank.y += 0.05;
+                }
+                if (tank.y >= 12) {
+                    tank.y = 12;
+                }
+            }
+            function left(tank) {
+                tank.face = 270;
+                if (isCanMove(tank.x - 0.05, tank.y)) {
+                    tank.x -= 0.05;
+                }
+                if (tank.x <= 0) {
+                    tank.x = 0;
+                }
+            }
+            function right(tank) {
+                tank.face = 90;
+                if (isCanMove(tank.x + 0.05, tank.y)) {
+                    tank.x += 0.05;
+                }
+                if (tank.x >= 12) {
+                    tank.x = 12;
+                }
+            }
+            function putBullet(tank) {
+                if (tank.bullet > 0) {
+                    tank.bullet--;
+                    switch (tank.face) {
+                        case 0://上
+                            bullets.push(new Bullet(tank.x + 0.5, tank.y - 0.2, 0, -0.2, 1));
+                            break;
+                        case 90://右
+                            bullets.push(new Bullet(tank.x + 1.2, tank.y + 0.5, 0.2, 0, 1));
+                            break;
+                        case 180://下
+                            bullets.push(new Bullet(tank.x + 0.5, tank.y + 1.2, 0, 0.2, 1));
+                            break;
+                        case 270://左
+                            bullets.push(new Bullet(tank.x - 0.2, tank.y + 0.5, -0.2, 0, 1));
+                            break;
+                    }
+                }
+            }
+            var canvas = document.getElementById("myCanvas");
+            var g = canvas.getContext("2d");
+            //地图
+            var map;
+            //定时器
+            var ident;
+            var time = 0;
+            //触摸坐标
+            //单指触摸
+            window.addEventListener('touchstart', function (event) {
+                // 如果这个元素的位置内只有一个手指的话
+                event.preventDefault();// 阻止浏览器默认事件，重要 
+                for (var i = 0; event.targetTouches.length; i++) {
+                    var touch = event.targetTouches[i];
+                    var touX;
+                    var touY;
+                    touX = touch.clientX;
+                    touY = touch.clientY;
+                    startTouch(touX, touY);
+                }
+            }, false);
+            window.addEventListener('touchmove', function (event) {
+                // 如果这个元素的位置内只有一个手指的话
+                event.preventDefault();// 阻止浏览器默认事件，重要 
+                endTouching();
+                for (var i = 0; event.targetTouches.length; i++) {
+                    var touch = event.targetTouches[i];
+                    var touX;
+                    var touY;
+                    touX = touch.pageX;
+                    touY = touch.pageY;
+                    startTouch(touX, touY);
+                }
+            }, false);
+            window.addEventListener('touchend', function (event) {
+                endTouching();
+                for (var i = 0; event.targetTouches.length; i++) {
+                    var touch = event.targetTouches[i];
+                    var touX;
+                    var touY;
+                    touX = touch.clientX;
+                    touY = touch.clientY;
+                    startTouch(touX, touY);
+                }
+            }, false);
+            function startTouch(tank, touX, touY) {
+                if (touX > windowWidth * 0.18 && touX < windowWidth * 0.31 && touY > windowHeight * 0.72 && touY < windowHeight * 0.85) {
+                    tank.touchUping = "true";
+                } else if (touX > windowWidth * 0.08 && touX < windowWidth * 0.21 && touY > windowHeight * 0.79 && touY < windowHeight * 0.92) {
+                    tank.touchLefting = "true";
+                } else if (touX > windowWidth * 0.28 && touX < windowWidth * 0.41 && touY > windowHeight * 0.79 && touY < windowHeight * 0.92) {
+                    tank.touchRighting = "true";
+                } else if (touX > windowWidth * 0.18 && touX < windowWidth * 0.31 && touY > windowHeight * 0.87 && touY < windowHeight) {
+                    tank.touchDowning = "true";
+                } else if (touX > windowWidth * 0.7 && touX < windowWidth * 0.86 && touY > windowHeight * 0.82 && touY < windowHeight * 0.88) {
+                    tank.touchBing = "true";
+                } else if (touX > windowWidth * 0.5 && touX < windowWidth * 0.66 && touY > windowHeight * 0.82 && touY < windowHeight * 0.98) {
+                    tank.touchAing = "true";
+                }
+            }
+            function endTouching(tank) {
+                tank.touchUping = "false";
+                tank.touchDowning = "false";
+                tank.touchRighting = "false";
+                tank.touchLefting = "false";
+                tank.touchAing = "false";
+                tank.touchBing = "false";
+            }
+            //检查按键
+            function checkTouch() {
+                for (var i = 0; i < tanks.length; i++) {
+                    tank = tanks[i];
+                    if (tank.touchUping == "true") {
+                        up(tank);
+                    }
+                    if (tank.touchLefting == "true") {
+                        left(tank);
+                    }
+                    if (tank.touchRighting == "true") {
+                        right(tank);
+                    }
+                    if (tank.touchDowning == "true") {
+                        down(tank);
+                    }
+                    if (tank.touchAing == "true") {
+                        putBullet(tank);
+                    }
+                    if (tank.touchBing == "true") {
+
+                    }
+                }
+            }
+            //电脑按键
+            function doKeyDown(e) {
+                if (window.event) // IE8 以及更早版本
+                {
+                    tempKeyChar = event.keyCode;
+                } else if (event.which) // IE9/Firefox/Chrome/Opera/Safari
+                {
+                    tempKeyChar = event.which;
+                }
+                var keychar = String.fromCharCode(tempKeyChar);
+                endTouching(tanks[0]);
+                switch (keychar) {
+                    case 'w':
+                    case 'W':
+                        endTouching(tanks[0]);
+                        tanks[0].touchUping = "true";
+                        break;
+                    case 's':
+                    case 'S':
+                        endTouching(tanks[0]);
+                        tanks[0].touchDowning = "true";
+                        down(tanks[0]);
+                        break;
+                    case 'a':
+                    case 'A':
+                        endTouching(tanks[0]);
+                        tanks[0].touchLefting = "true";
+                        left(tanks[0]);
+                        break;
+                    case 'd':
+                    case 'D':
+                        endTouching(tanks[0]);
+                        tanks[0].touchRighting = "true";
+                        break;
+                    case 'c':
+                    case 'C':
+                        endTouching(tanks[0]);
+                        tanks[0].touchAing = "true";
+                        break;
+                    case 'v':
+                    case 'V':
+                        endTouching(tanks[0]);
+                        tanks[0].touchBing = "true";
+                        break;
+                }
+            }
+            //初始化
+            function init() {
+                tanks = new Array();
+                bullets = new Array();
+                if (id > foeId) {
+                    tanks.push(new Tank(0, 6, 1, 5));
+                    tanks.push(new Tank(12, 6, 1, 5));
+                } else {
+                    tanks.push(new Tank(12, 6, 1, 5));
+                    tanks.push(new Tank(0, 6, 1, 5));
+                }
+                map = new Array(13);
+                for (var i = 0; i < 13; i++) {
+                    map[i] = new Array(13);
+                }
+                var num = 0;
+                for (var i = 0; i < 13; i++) {
+                    for (var j = 0; j < 13; j++) {
+                        num += root * j + ((root * i) % 1000);
+                        if (num % 11 <= 3) {
+                            map[i][j] = new Wall(0, 3);
+                        } else {
+                            map[i][j] = new Wall(1, 1);
+                        }
+                    }
+                }
+                map[0][6] = new Wall(1, 1);
+                map[12][6] = new Wall(1, 1);
+            }
+            //主函数
+            function main() {
+                try {
+                    canvas.addEventListener('keydown', doKeyDown, true);
+                    canvas.focus();
+                    window.addEventListener('keydown', doKeyDown, true);
+                    init();
+                } catch (e) {
+                    window.alert(e.toLocaleString());
+                }
+                ident = window.setInterval(function () {
+                    //开始
+                    try {
+                        function bulletRun() {
+                            for (var i = 0; i < bullets.length; i++) {
+                                var bullet = bullets[i];
+                                if (bullet.able) {
+                                    if (bullet.x < 0 || bullet.y < 0 || bullet.x >= 13 || bullet.y >= 13) {
+                                        bullet.able = false;
+                                        continue;
+                                    }
+                                    var tempX = changeNumber(bullet.x);
+                                    var tempY = changeNumber(bullet.y);
+                                    if (map[tempX][tempY].id !== 1) {
+                                        map[tempX][tempY].hp -= bullet.hurt;
+                                        bullet.able = false;
+                                        if (map[tempX][tempY].hp <= 0) {
+                                            map[tempX][tempY] = new Wall(1, 1);
+                                        }
+                                        continue;
+                                    }
+                                    for (var j = 0; j < tanks.length; j++) {
+                                        var tempTank = tanks[j];
+                                        if (bullet.x >= tempTank.x + 0.1 && bullet.x < tempTank.x + 0.9 && bullet.y > tempTank.y + 0.1 && bullet.y < tempTank.y + 0.9) {
+                                            tempTank.hp -= bullet.hurt;
+                                            bullet.able = false;
+                                            break;
+                                        }
+                                    }
+                                    bullet.x += bullet.speedX;
+                                    bullet.y += bullet.speedY;
+                                }
+                            }
+                        }
+                        function drawString() {
+                            g.drawImage(numImage[tanks[0].bullet], windowWidth * 0.95, windowHeight * 0.01, windowWidth * 0.05, windowHeight * 0.05);
+                        }
+                        function tankAI() {
+
+                        }
+                        function drawMap() {
+                            g.setTransform(1, 0, 0, 1, 0, 0);
+                            g.clearRect(0, 0, windowWidth, windowHeight);
+                            g.strokeRect(2, 2, unitX * 13 - 4, unitY * 13 - 4);
+                            g.drawImage(backImage, 0, 0, windowWidth, windowHeight);
+                            //画地图
+                            for (var i = 0; i < 13; i++) {
+                                for (var j = 0; j < 13; j++) {
+                                    var id = map[i][j].id;
+                                    var hp = map[i][j].hp;
+                                    g.drawImage(wallImage[1][0], i * unitX, j * unitY, unitX, unitY);
+                                    g.drawImage(wallImage[id][hp - 1], i * unitX, j * unitY, unitX, unitY);
+                                }
+                            }
+                            //画坦克
+                            for (var i = 0; i < tanks.length; i++) {
+                                var temp = tanks[i];
+                                if (temp.hp <= 0) {
+                                    continue;
+                                }
+                                temp.bulletTime++;
+                                if (temp.bulletTime >= temp.bulletMaxTime) {
+                                    temp.bulletTime = 0;
+                                    if (temp.bullet < temp.maxBullet) {
+                                        temp.bullet++;
+                                    }
+                                }
+                                g.setTransform(1, 0, 0, 1, temp.x * unitX + unitX / 2, temp.y * unitY + unitY / 2);
+                                g.rotate(temp.face * Math.PI / 180);
+                                g.drawImage(tankImage[temp.hp - 1], -unitX / 2, -unitY / 2, unitX, unitY);
+                            }
+                            //画子弹
+                            for (var i = 0; i < bullets.length; i++) {
+                                var bullet = bullets[i];
+                                if (bullet.able) {
+                                    g.setTransform(1, 0, 0, 1, bullet.x * unitX, bullet.y * unitY);
+                                    g.drawImage(bulletImage, 0, 0, unitX / 5, unitX / 5);
+                                }
+                            }
+                            //画按键
+                            g.setTransform(1, 0, 0, 1, 0, 0);
+                            g.drawImage(upImage, windowWidth * 0.18, windowHeight * 0.72, windowWidth * 0.13, windowHeight * 0.13);
+                            g.drawImage(leftImage, windowWidth * 0.08, windowHeight * 0.79, windowWidth * 0.13, windowHeight * 0.13);
+                            g.drawImage(rightImage, windowWidth * 0.28, windowHeight * 0.79, windowWidth * 0.13, windowHeight * 0.13);
+                            g.drawImage(downImage, windowWidth * 0.18, windowHeight * 0.87, windowWidth * 0.13, windowHeight * 0.13);
+                            g.drawImage(bImage, windowWidth * 0.7, windowHeight * 0.825, windowWidth * 0.15, windowHeight * 0.15);
+                            g.drawImage(aImage, windowWidth * 0.5, windowHeight * 0.825, windowWidth * 0.15, windowHeight * 0.15);
+                        }
+                    } catch (e) {
+                        window.alert(e.toLocaleString());
+                    }
+                    bulletRun();
+                    drawMap();
+                    letWeb(tanks[0]);
+                    checkTouch();
+                    drawString();
+                    //结束
+                }, 50);
+            }
+        </script>
+
+    </body>
+</html>

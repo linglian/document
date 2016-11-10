@@ -1,0 +1,82 @@
+#include<iostream>
+using namespace std;
+class Node{
+	public:
+		Node(char data){
+			this->data = data;
+			next = NULL;
+		}
+	char data;
+	Node *next; 
+};
+class Stack{
+	public:
+		Stack(){
+			first = NULL;
+		}
+		void push(Node *x){
+			x->next = first;
+			first = x; 
+		}
+		Node* pop(){
+			char *a = "None";
+			if(first==NULL) throw a;
+			Node *temp = first;
+			first = first->next;
+			return temp;
+		}
+		Node* getTop(){
+			char *a = "None";
+			if(first==NULL) throw a;
+			return first;
+		}
+		bool empty(){
+			return first==NULL?true:false;
+		}
+		void clear(){
+			if(first!=NULL)
+			delete first;
+			first = NULL;
+		}
+		~Stack(){
+			if(first!=NULL)
+			delete first;
+		}
+	private:
+		Node *first;
+};
+int main(){
+	char a,b;
+	Stack stack;
+	cin>>a;
+	while(a!='E'){
+		try{
+		switch(a){
+			case 'P':
+			cin>>b;
+			stack.push(new Node(b));
+			break;
+			case 'D':
+				cout<<stack.pop()->data<<endl;
+				break;
+			case 'Y':
+				if(stack.empty()){
+					cout<<"Yes"<<endl;
+				}else{
+					cout<<"No"<<endl;
+				}
+				break;
+			case 'G':
+				cout<<stack.getTop()->data<<endl;
+				break;
+			case 'T':
+				stack.clear();
+				break;
+		}
+	}catch(char *a){
+		cout<<a<<endl;
+	}
+		cin>>a;
+	}
+	return 0;
+}

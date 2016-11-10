@@ -1,0 +1,88 @@
+#include<iostream>
+#include<string>
+#include<queue>
+using namespace std;
+class Node
+{
+public:
+	Node(string con, float wht, Node* left, Node* right, string co );
+	string content;
+	float weight;
+	Node* lchild;
+	Node* rchild;
+	string code;
+	int parent;
+};
+Node::Node(string con, float wht, Node* left, Node* right, string co )
+{
+	content=con;
+		weight=wht;
+		lchild=left;
+		rchild=right;
+		code=co;
+		parent=0;
+}
+void select(Node** a, int low, int high)
+{
+    for(int i=low+1;i<high;i++)
+	{
+        Node* tem=a[i];
+        int j=i-1;
+        while(a[j]->weight>tem->weight&&j>=low)
+		{
+            a[j+1]=a[j];
+            j--;
+		}
+        a[j+1]=tem;
+	}
+}
+void huffman_tree(string* s, float* w,int n,Node**a)
+{
+    for(int i=0;i<n;i++)
+	{
+        a[i]=new Node(s[i],w[i],NULL,NULL,"");
+	}
+    select(a,0,n);
+    int p=0;
+    while(p!=n-1){
+        Node* min=a[p];
+        Node* min2=a[p+1];
+        Node* new_Node=new Node("",min->weight+min2->weight,min,min2,"");
+        a[p+1]=new_Node;
+        p=p+1;
+        select(a,p,n);
+	}
+}
+void huffmancode(Node* p)
+{
+    queue<Node*> q;
+    q.push(p);
+    while(q.size()!=0)
+	{
+        Node* cur=q.front();
+        q.pop();
+        Node* l=cur->lchild;
+        if(l!=NULL){l->code=cur->code+"0"; q.push(l);}
+        Node* r=cur->rchild;
+        if(r!=NULL){r->code=cur->code+"1"; q.push(r);}
+        if(l==NULL&&r==NULL){
+            cout<<cur->content<<": "<<cur->code<<endl;
+		}
+	}
+}
+int main()
+{
+	Node* a[8];
+	string f[8];
+	cout <<"请输入8个字符:\n";
+	for(int i=0;i<8;i++)
+		cin >> f[i];
+	float w[8]={1,2,3,4,5,6,7,8};
+	cout << "原始字符串和它们的权值 :\n";
+	for(i=0;i<8;i++)
+		cout << f[i] << ": " << w[i] << " ";cout << endl;
+	huffman_tree(f,w,8,a);
+	cout << "编码字符串:\n";
+	huffmancode(a[7]);
+	return 0;
+}

@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>#note</Title>
+			<Shortcut>#note</Shortcut>
+			<Description>注释 代码段</Description>
+			<Author>凌恋</Author>
+			<SnippetTypes>
+				<SnippetType>注释</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal>
+					<ID>str</ID>
+					<ToolTip>注释的内容</ToolTip>
+					<Default>在这里写注释</Default>
+				</Literal>
+			</Declarations>
+			<Code Language="csharp"><![CDATA[
+	/*******************
+	 *$str$
+	 *
+	 *
+	 *******************/
+	{
+		$selected$ $end$
+	}]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+</CodeSnippets>

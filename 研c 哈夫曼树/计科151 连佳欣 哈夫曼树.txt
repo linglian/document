@@ -1,0 +1,211 @@
+#include<iostream>
+using namespace std;
+const int MaxSize=100;        
+class HuffNode                         //结点类
+{
+	public:
+		int weight;         //结点的权值 
+		int lchild,rchild,parent;     //结点的左孩子，右孩子，双亲 
+		HuffNode();        //结点的构造函数 
+		
+};
+
+class HuffCode                        
+{
+	public:
+		int bit[MaxSize];     //编码存放的位置 
+		int start;            //编码开始存放时的位置 
+		char ch;              //所对应的字符 
+};
+class HuffTree                       //哈夫曼树类 
+{
+	private:
+		HuffNode h[MaxSize];              //结点类数组 
+		HuffCode Code[MaxSize];           //编码类数组 
+		char b[MaxSize];                  //用来存放一串字符串中的不同字符 
+		static int n;                     //定义最初的结点个数（最后的叶子结点个数） 
+		public:
+			HuffTree(char a[]);     //哈夫曼树的构造函数 
+			void Select();         //生成一棵哈夫曼树 
+			void huffcode();    //编码 
+			void outputcode(char c[]);      //输出密文 
+			void trancode(char c[]);   //译码 
+};
+int HuffTree::n=0;
+HuffNode::HuffNode()                 //初始化 
+{
+	lchild=-1;
+	rchild=-1;
+	parent=-1;
+}
+HuffTree::HuffTree(char a[])          //初始化 
+{
+	int i=0,j,r;
+	while(a[i]!='\0')
+	{
+		j=0;
+		while(i>j)
+		{
+			if(a[i]!=a[j])
+			{
+			   j++;
+			}
+			else
+			{
+               for(r=0;r<n;r++)
+               {
+               	if(b[r]==a[i])
+               	{
+               	h[r].weight++;
+               	break;
+               }
+			   }
+				
+				break;
+			}
+			
+		}
+		if(i<j||i==j)
+		{ 
+		n++;
+		h[n-1].weight++;
+		b[n-1]=a[i];
+	}
+	i++;
+		
+}
+}
+void HuffTree::Select()              //生成哈夫曼树 
+{ 
+    int m=2*n-1;
+	int i,j;
+	int p,q,k;
+	int min1,min2;     //定义变量依次存放权值最小的和次小的 
+	static int c;
+	c=n;
+	for(i=n;i<m;i++)
+	{
+		min1=111;
+	    min2=111;
+		for(j=0;j<c;j++)
+		{
+			if(h[j].parent==-1)
+			{
+				if(h[j].weight<min1)
+				{
+					min1=h[j].weight;
+					p=j;
+				}
+			}
+		}
+		for(j=0;j<c;j++)
+		{
+			if(h[j].parent==-1)
+			{
+				if((h[j].weight<min2)&&(h[j].weight>min1||h[j].weight==min1)&&(j!=p))
+				{
+					min2=h[j].weight;
+					q=j;
+				}
+			}
+		}
+		h[p].parent=i;
+		h[q].parent=i;
+		h[i].weight=h[p].weight+h[q].weight;
+		h[i].lchild=p;
+		h[i].rchild=q;
+		c++;
+	}
+	
+	
+}
+void HuffTree::huffcode()         //编码 
+{
+	int x,y,i;
+	for(i=0;i<n;i++)
+	{
+		HuffCode code;
+		code.start=n;
+		code.ch=b[i];
+		x=i;
+		y=h[i].parent;
+		while(y!=-1)
+		{
+			code.start--;
+			if(h[y].lchild==x)  
+			{
+			code.bit[code.start]=0;
+			
+		}
+			else 
+			{
+	          code.bit[code.start]=1;
+	      }
+			x=y;
+			y=h[y].parent;
+		}
+		Code[i]=code;
+	}
+	
+}
+void HuffTree::outputcode(char c[])                   //输出密文 
+{
+	int i=0,j,k=0;
+	while(c[k]!='\0')
+	{
+		if(c[k]==Code[i].ch)
+		{
+		for(j=Code[i].start;j<n;j++)
+		{
+			cout<<Code[i].bit[j];
+		}
+	}
+	else
+	{
+		i++;
+		if(i>n||i==n)
+		{
+			i=0;
+		}
+		continue;
+	}
+	k++;
+	
+	}
+}
+void HuffTree::trancode(char c[])            //译码 
+{
+	int m=2*n-1;
+	int i=m-1;
+	int j;
+	for(j=0;c[j]!='\0';j++)
+	{
+		if(c[j]=='0')  i=h[i].lchild;
+		else  if(c[j]=='1') 
+		{
+	      i=h[i].rchild;
+	  }
+		if(h[i].lchild==-1)
+		{
+			cout<<Code[i].ch<<" ";
+			i=m-1;
+		}
+	}
+}
+
+int main()
+{
+	char m[100];
+	cin>>m;          //输入明文 
+	HuffTree t(m);
+	t.Select();
+	t.huffcode();
+	t.outputcode(m);
+	char c[100];
+	cin>>c;              //输入密文 
+	t.trancode(c);
+	return 0;
+}
+
+
+
